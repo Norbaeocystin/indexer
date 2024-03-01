@@ -6,7 +6,7 @@ use sui_types::id::ID;
 #[derive(Serialize,Deserialize,Debug)]
 pub struct IndexerData {
     pub digest: String,
-    pub checkpoint_timestamp: u64,
+    pub checkpoint: u64,
     pub epoch: u64,
     pub data: Vec<u8>,
     pub index: u64,
@@ -22,7 +22,7 @@ pub fn process_txn(data: &CheckpointData, filter: &Vec<ObjectID>) -> Vec<(String
                     let digest = txn.transaction.digest().to_string();
                     let result = IndexerData{
                         digest: digest.clone(),
-                        checkpoint_timestamp: data.checkpoint_summary.timestamp_ms.try_into().unwrap(),
+                        checkpoint: data.checkpoint_summary.sequence_number,
                         epoch: data.checkpoint_summary.epoch.try_into().unwrap(),
                         data: event.contents.clone(),
                         index: idx as u64,

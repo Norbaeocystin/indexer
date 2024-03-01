@@ -2,6 +2,8 @@ sui indexer for scallop
 
 [sui custom indexer docs](https://docs.sui.io/guides/developer/advanced/custom-indexer)
 
+scallop data are starting from 7 976 007 - checkpoint ... +- epoch 80 ...
+
 install mongodb,redis,
 turn on checkpoint executor by adding to sui full node config:
 ```
@@ -12,7 +14,8 @@ checkpoint-executor-config:
     
 ```  
     
- also possible to use option to create service ( exit when there are no files ...)
+ also possible to use option to create service ( exit when there are no files ...) but there can be problem with sinchronization ...
+exit if there is indexer process? or system service will file?
 
 ```
 [Unit]
