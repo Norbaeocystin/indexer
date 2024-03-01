@@ -3,8 +3,8 @@ use log::{info, LevelFilter};
 use sui_types::base_types::ObjectID;
 use sui_indexer::reader::CheckpointReader;
 
-
-fn main(){
+#[test]
+fn speed_test(){
     env_logger::builder().filter_level(LevelFilter::Debug).init();
     let start = SystemTime::now();
     let mut reader = CheckpointReader{ path: "/mnt/sui/ingestion".parse().unwrap(), current_checkpoint_number: 0 };
