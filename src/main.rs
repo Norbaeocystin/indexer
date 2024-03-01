@@ -90,7 +90,7 @@ fn main(){
             let client = client.clone();
                 let checkpoint_number = number.clone();
             async move {
-                info!("conecting redis client");
+                debug!("conecting redis client");
                 client.set::<u64, u64, u64>(0_u64, checkpoint_number, None, None, false).await;
                 // return client.connect().await.unwrap();
             }});
