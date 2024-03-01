@@ -15,4 +15,4 @@ loading of all files took 14 s
 processing iteration: took 0 ms
 removing 10k took: 5 s
 
-# 15 33 - 16407
+# 16:08 158 000
