@@ -1,7 +1,7 @@
 sui indexer for scallop
 
-install mongodb:
-turn off checkpoint executor by adding to sui full node config:
+install mongodb,
+turn on checkpoint executor by adding to sui full node config:
 ```
 checkpoint-executor-config:
     checkpoint-execution-max-concurrency: 200
