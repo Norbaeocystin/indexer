@@ -11,6 +11,6 @@ checkpoint-executor-config:
     data-ingestion-dir: /mnt/sui/ingestion```
 
 
-loading of 10k files took 14 s
+loading of all files took 14 s
 processing iteration: took 0 ms
 removing 10k took: 5 s
