@@ -8,7 +8,7 @@ fn speed_test(){
     env_logger::builder().filter_level(LevelFilter::Debug).init();
     let start = SystemTime::now();
     let mut reader = CheckpointReader{ path: "/mnt/sui/ingestion".parse().unwrap(), current_checkpoint_number: 0 };
-    let files = reader.read_local_files().unwrap();
+    let files = reader.read_local_files(10_000).unwrap();
     info!("first: {}, last: {}, length: {} took: {} ms",
         files.first().unwrap().checkpoint_summary.sequence_number,
         files.last().unwrap().checkpoint_summary.sequence_number,
@@ -30,5 +30,5 @@ fn speed_test(){
     info!("iteration took: {} ms", start.elapsed().unwrap().as_millis());
     let start = SystemTime::now();
     let removed = reader.gc_processed_files(files.last().unwrap().checkpoint_summary.sequence_number).unwrap();
-    info!("iteration took: {} ms removed: {}", start.elapsed().unwrap().as_millis(), removed);
+    info!("removing took: {} ms removed: {}", start.elapsed().unwrap().as_millis(), removed);
 }

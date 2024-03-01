@@ -39,14 +39,19 @@ const MAX_CHECKPOINTS_IN_PROGRESS: usize = 10000;
 impl CheckpointReader {
     /// Represents a single iteration of the reader.
     /// Reads files in a local directory, validates them, and forwards `CheckpointData` to the executor.
-    pub fn read_local_files(&self) -> Result<Vec<CheckpointData>> {
+    pub fn read_local_files(&self, batch_size: usize) -> Result<Vec<CheckpointData>> {
         let mut files = vec![];
+        let mut batch: usize = 0;
         for entry in fs::read_dir(self.path.clone())? {
+            if batch >= batch_size {
+                break
+            }
             let entry = entry?;
             let filename = entry.file_name();
             if let Some(sequence_number) = Self::checkpoint_number_from_file_path(&filename) {
                 if sequence_number >= self.current_checkpoint_number {
                     files.push((sequence_number, entry.path()));
+                    batch += 1;
                 }
             }
         }
