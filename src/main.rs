@@ -89,7 +89,8 @@ fn main(){
                     async move {
                         for (digest, data) in result {
                             let result = serde_json::to_string(&data).unwrap();
-                            client.set::<String, String, String>(digest.clone(), result, None, None, false).await;
+                            let digest_modified = format!("{}::{}", digest, data.index);
+                            client.set::<String, String, String>(digest_modified, result, None, None, false).await;
                             debug!("inserting data: {}", digest);
                         }
                         // return client.connect().await.unwrap();
