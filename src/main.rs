@@ -89,6 +89,7 @@ fn main(){
                     async move {
                         for (digest, data) in result {
                             let result = serde_json::to_string(&data).unwrap();
+                            // more events can have same digest ... with index is unique
                             let digest_modified = format!("{}::{}", digest, data.index);
                             client.set::<String, String, String>(digest_modified, result, None, None, false).await;
                             debug!("inserting data: {}", digest);

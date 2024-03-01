@@ -8,13 +8,19 @@ turn on checkpoint executor by adding to sui full node config:
 checkpoint-executor-config:
     checkpoint-execution-max-concurrency: 200
     local-execution-timeout-sec: 30
-    data-ingestion-dir: /mnt/sui/ingestion```
+    data-ingestion-dir: /mnt/sui/ingestion
+    
+```  
+    
+ also possible to use option to create service ( exit when there are no files ...)
 
+```
+[Unit]
+Description= Triggers the service
 
-loading of all files took 14 s
-processing iteration: took 0 ms
-removing 10k took: 5 s
+[Path]
+DirectoryNotEmpty=/path/to/monitor
 
-# 16:08 158 000
-# 16:31 264546
-# 16:41 491636
+[Install]
+WantedBy=multi-user.target
+```
