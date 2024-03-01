@@ -13,22 +13,26 @@ use mongodb::{bson::doc, Client, Cursor};
 use mongodb::options::{InsertOneOptions};
 use serde::{Deserialize, Serialize};
 use bcs;
-use clap::Parser;
 use tokio::fs::{File, OpenOptions};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use libc;
 use fred::prelude::*;
 use fred::prelude::ServerConfig::Centralized;
 use fred::types::RespVersion;
+use log::{info, LevelFilter};
+use reader::CheckpointReader;
+use clap::Parser;
+use clap::ArgAction;
 
 pub mod events;
+pub mod reader;
 
 #[derive(Parser)]
 struct Cli {
-    #[arg(short,long, default_value = "mongodb://localhost:27017")]
-    mongo_uri: String,
-    #[arg(short,long, default_value = "indexer")]
-    db_name: String
+    #[arg(short,long, default_value = "/mnt/sui/ingestion")]
+    path: String,
+    #[arg(short, long, action)]
+    debug: bool,
 
 }
 
@@ -99,71 +103,14 @@ struct Point {
     index: usize
 }
 
-#[async_trait]
-impl Worker for CustomWorker {
-    async fn process_checkpoint(&self, checkpoint: CheckpointData) -> Result<()>{
-        // custom processing logic
-        for item in checkpoint.transactions {
-            // println!("{}", item.transaction.digest());
-            let t = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
-            for events in item.events.iter() {
-                for (idx, event) in events.data.iter().enumerate() {
-                    unsafe {
-                        if self.ids.contains(&event.package_id){
-                            let data = Point{
-                                data: event.clone().contents,
-                                digest: item.transaction.digest().to_string(),
-                                timestamp: t,
-                                index: idx,
-                            };
-                            // TODO _id derive from data ...
-                            self.mongodb_client.database("indexer").collection("events").insert_one(data, None).await;
-                        }
-                    }
-                }
-            }
-        };
-            Ok(())
-    }
-}
-
-#[tokio::main]
-async fn main() -> Result<()>{
+fn main(){
     let cli = Cli::parse();
-    let (exit_sender, exit_receiver) = oneshot::channel();
-    let metrics = DataIngestionMetrics::new(&Registry::new());
-    // let progress_store = DummyProgressStore{mongodb_client: Client::with_uri_str(cli.mongo_uri.clone()).await.unwrap()}; // FileProgressStore::new(PathBuf::from("/tmp/checkpoint"));
-    let client = RedisClient::new(RedisConfig{
-        fail_fast: false,
-        blocking: Blocking::Interrupt,
-        username: None,
-        password: None,
-        server: Centralized{
-            server: Server {
-                host: "localhost".parse().unwrap(),
-                port: 6379,
-            }
-        },
-        version: RespVersion::RESP2,
-        database: Some(0),
-    }, Some(PerformanceConfig::default()), Some(ConnectionConfig::default()), Some(ReconnectPolicy::default()));
-    client.connect();
-    client.wait_for_connect().await;
-    // client.init().await;
-    let progress_store = DummyProgressStore{ redis_client: client};
-    // let progress_store = DummyProgressStore;
-    let custom_worker = CustomWorker{ ids: vec![ObjectID::from_str("0xefe8b36d5b2e43728cc323298626b83177803521d195cfb11e15b910e892fddf").unwrap(),
-    ObjectID::from_str("0xc38f849e81cfe46d4e4320f508ea7dda42934a329d5a6571bb4c3cb6ea63f5da").unwrap(),
-    ], mongodb_client: Client::with_uri_str(cli.mongo_uri).await.unwrap() };
-    let mut executor = IndexerExecutor::new(progress_store, 1 /* number of workflow types */, metrics);
-    let worker_pool = WorkerPool::new(custom_worker, "custom worker".to_string(), 100);
-    executor.register(worker_pool).await?;
-    executor.run(
-        PathBuf::from("/mnt/sui/ingestion"), // path to a local directory
-        Some("https://checkpoints.mainnet.sui.io".to_string()),
-        vec![], // optional remote store access options
-        1,
-        exit_receiver,
-    ).await?;
-    Ok(())
+    if cli.debug {
+        env_logger::builder().filter_level(LevelFilter::Debug).init();
+    } else {
+        env_logger::builder().filter_level(LevelFilter::Info).init();
+    }
+    let reader = CheckpointReader{ path: "/mnt/sui/ingestion".parse().unwrap(), current_checkpoint_number: 0 };
+    let files = reader.read_local_files().unwrap();
+    info!()
 }

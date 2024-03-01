@@ -4,6 +4,15 @@ publish = false
 edition = "2021"
 version = "0.1.0"
 
+[lib]
+name = "sui-indexer"
+path = "src/lib.rs"
+
+[[bin]]
+name = "sui-indexer"
+path = "src/main.rs"
+
+
 [dependencies]
 anyhow = "1.0.71"
 async-trait = { version = "0.1.77", features = [] }
@@ -19,6 +28,8 @@ bcs = "0.1.6"
 clap = { version = "4.3.11", features = ["derive"] }
 libc = { version = "0.2.153", features = [] }
 fred = "8.0.4"
+log = { version = "0.4.19", features = [] }
+env_logger = "0.10.0"
 
 
 [dev-dependencies]
