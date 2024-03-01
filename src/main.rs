@@ -53,8 +53,8 @@ fn main(){
         version: RespVersion::RESP2,
         database: Some(0),
     }, Some(PerformanceConfig::default()), Some(ConnectionConfig::default()), Some(ReconnectPolicy::default())));
-    let _ = client.connect();
     let _ = runtime.block_on(async {
+        let _ = client.connect();
         client.wait_for_connect().await
     });
     let mut reader = CheckpointReader{ path: "/mnt/sui/ingestion".parse().unwrap(), current_checkpoint_number: cli.start };
