@@ -1,0 +1,21 @@
+[package]
+name = "sui-indexer"
+publish = false
+edition = "2021"
+version = "0.1.0"
+
+[dependencies]
+anyhow = "1.0.71"
+async-trait = { version = "0.1.77", features = [] }
+sui-data-ingestion = { git = "https://github.com/MystenLabs/sui"}
+sui-data-ingestion-core = { git = "https://github.com/MystenLabs/sui"}
+sui-types = { git = "https://github.com/MystenLabs/sui"}
+sui-storage = { git = "https://github.com/MystenLabs/sui"}
+tokio = { version = "1.36.0", features = [] }
+prometheus = "0.13.3"
+mongodb = "2.8.1"
+serde = { version = "1.0.197", features = ["derive"] }
+bcs = "0.1.6"
+
+
+[dev-dependencies]
