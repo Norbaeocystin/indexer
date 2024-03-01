@@ -139,12 +139,12 @@ impl CheckpointReader {
         Ok(removed)
     }
 
-    // fn checkpoint_number_from_file_path(file_name: &OsString) -> Option<CheckpointSequenceNumber> {
-    //     file_name
-    //         .to_str()
-    //         .and_then(|s| s.rfind('.').map(|pos| &s[..pos]))
-    //         .and_then(|s| s.parse().ok())
-    // }
+    pub fn checkpoint_number_from_file_path(file_name: &OsString) -> Option<CheckpointSequenceNumber> {
+        file_name
+            .to_str()
+            .and_then(|s| s.rfind('.').map(|pos| &s[..pos]))
+            .and_then(|s| s.parse().ok())
+    }
 
     // pub fn initialize(
     //     path: PathBuf,
