@@ -29,6 +29,7 @@ struct Cli {
 }
 
 fn main(){
+    info!("starting indexer");
     let filter = vec![ObjectID::from_str("0xefe8b36d5b2e43728cc323298626b83177803521d195cfb11e15b910e892fddf").unwrap(),
                       ObjectID::from_str("0xc38f849e81cfe46d4e4320f508ea7dda42934a329d5a6571bb4c3cb6ea63f5da").unwrap(),
     ];
@@ -57,8 +58,10 @@ fn main(){
         let _ = client.connect();
         client.wait_for_connect().await
     });
+    info!("preparing redis done");
     let mut reader = CheckpointReader{ path: "/mnt/sui/ingestion".parse().unwrap(), current_checkpoint_number: cli.start };
     loop {
+        debug!("fetching file");
         let files = reader.read_all_files();
         if files.len() > 0 {
             sleep(Duration::from_millis(100));
