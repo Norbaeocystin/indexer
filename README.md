@@ -1,5 +1,7 @@
 sui indexer for scallop
 
+[sui custom indexer docs](https://docs.sui.io/guides/developer/advanced/custom-indexer)
+
 install mongodb,
 turn on checkpoint executor by adding to sui full node config:
 ```
