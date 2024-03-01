@@ -111,6 +111,6 @@ fn main(){
         env_logger::builder().filter_level(LevelFilter::Info).init();
     }
     let reader = CheckpointReader{ path: "/mnt/sui/ingestion".parse().unwrap(), current_checkpoint_number: 0 };
-    let files = reader.read_local_files(10_000).unwrap();
+    let files = reader.read_local_files().unwrap();
     // info!()
 }
