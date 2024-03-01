@@ -48,7 +48,7 @@ impl ProgressStore for DummyProgressStore {
         while cursor.advance().await.unwrap_or(false) {
             return Ok(cursor.current().get("checkpoint").unwrap().unwrap().as_i64().unwrap() as u64)
         }
-        return Ok(27574662);
+        return Ok(0);
     }
 
     async fn save(
