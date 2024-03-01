@@ -11,7 +11,7 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use fred::prelude::*;
 use fred::prelude::ServerConfig::Centralized;
 use fred::types::RespVersion;
-use log::{debug, info, LevelFilter};
+use log::{debug, info, LevelFilter, warn};
 use reader::CheckpointReader;
 use clap::Parser;
 use tokio::runtime::Builder;
@@ -64,7 +64,14 @@ fn main(){
     let mut reader = CheckpointReader{ path: "/mnt/sui/ingestion".parse().unwrap(), current_checkpoint_number: cli.start };
     loop {
         debug!("fetching file");
-        let checkpoints = reader.read_local_files().unwrap();
+        // race condition?
+        let file_response = reader.read_local_files();
+        if file_response.is_err() {
+            sleep(Duration::from_millis(100));
+            warn!("something bad happened");
+            continue;
+        }
+        let checkpoints = file_response.unwrap();
         if checkpoints.len() == 0 {
             sleep(Duration::from_millis(100));
             debug!("No files to process ...");
