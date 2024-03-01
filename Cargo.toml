@@ -5,7 +5,7 @@ edition = "2021"
 version = "0.1.0"
 
 [lib]
-name = "sui-indexer"
+name = "sui_indexer"
 path = "src/lib.rs"
 
 [[bin]]
