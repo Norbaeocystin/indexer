@@ -1796,6 +1796,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "cookie-factory"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "396de984970346b0d9e93d1415082923c679e5ae5c3ee3dcbd104f5610af126b"
+
+[[package]]
 name = "core-foundation"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1830,6 +1836,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "crc16"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "338089f42c427b86394a5ee60ff321da23a5c89c9d89514c829687b26359fcff"
+
+[[package]]
 name = "crc32c"
 version = "0.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1852,6 +1864,15 @@ name = "crossbeam-channel"
 version = "0.5.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ab3db02a9c5b5121e1e42fbdb1aeb65f5e02624cc58c43f2884c6ccac0b82f95"
+dependencies = [
+ "crossbeam-utils",
+]
+
+[[package]]
+name = "crossbeam-queue"
+version = "0.3.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "df0346b5d5e76ac2fe4e327c5fd1118d6be7c51dfb18f9b7922923f287471e35"
 dependencies = [
  "crossbeam-utils",
 ]
@@ -2777,6 +2798,33 @@ name = "fragile"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6c2141d6d6c8512188a7891b4b01590a45f6dac67afb4f255c4124dbb86d4eaa"
+
+[[package]]
+name = "fred"
+version = "8.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2b4eaa3196a62b31b5c6830563e063562e6280af38f06f72456e6e1e8264e3cb"
+dependencies = [
+ "arc-swap",
+ "async-trait",
+ "bytes",
+ "bytes-utils",
+ "crossbeam-queue",
+ "float-cmp",
+ "futures",
+ "lazy_static",
+ "log",
+ "parking_lot",
+ "rand",
+ "redis-protocol",
+ "semver 1.0.22",
+ "socket2 0.5.6",
+ "tokio",
+ "tokio-stream",
+ "tokio-util 0.7.10 (registry+https://github.com/rust-lang/crates.io-index)",
+ "url",
+ "urlencoding",
+]
 
 [[package]]
 name = "fsevent-sys"
@@ -5818,6 +5866,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "redis-protocol"
+version = "4.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9c31deddf734dc0a39d3112e73490e88b61a05e83e074d211f348404cee4d2c6"
+dependencies = [
+ "bytes",
+ "bytes-utils",
+ "cookie-factory",
+ "crc16",
+ "log",
+ "nom",
+]
+
+[[package]]
 name = "redox_syscall"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7005,6 +7067,8 @@ dependencies = [
  "async-trait",
  "bcs",
  "clap",
+ "fred",
+ "libc",
  "mongodb",
  "prometheus",
  "serde",

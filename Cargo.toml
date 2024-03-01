@@ -17,6 +17,8 @@ mongodb = "2.8.1"
 serde = { version = "1.0.197", features = ["derive"] }
 bcs = "0.1.6"
 clap = { version = "4.3.11", features = ["derive"] }
+libc = { version = "0.2.153", features = [] }
+fred = "8.0.4"
 
 
 [dev-dependencies]
