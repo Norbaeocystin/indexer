@@ -1,6 +1,7 @@
 use std::str::FromStr;
 use std::sync::Arc;
 use std::fs::remove_file;
+use std::thread;
 use std::thread::sleep;
 use std::time::{Duration};
 use sui_types::base_types::ObjectID;
@@ -101,11 +102,11 @@ fn main(){
             remove_file(file_path);
             reader.current_checkpoint_number = number;
         }
-        // let number = reader.current_checkpoint_number.clone();
-        // let path = reader.path.clone();
-        // // thread::spawn( move ||
-        // //     {
-        // //     CheckpointReader::gc_processed_files(number, path);
-        // // });
+        let number = reader.current_checkpoint_number.clone();
+        let path = reader.path.clone();
+        thread::spawn( move ||
+            {
+            CheckpointReader::gc_processed_files(number, path);
+        });
     }
 }
