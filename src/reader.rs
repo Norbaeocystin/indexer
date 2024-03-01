@@ -73,10 +73,10 @@ impl CheckpointReader {
     }
 
     /// Cleans the local directory by removing all processed checkpoint files.
-    pub fn gc_processed_files(&mut self, watermark: CheckpointSequenceNumber) -> Result<u64> {
+    pub fn gc_processed_files(watermark: CheckpointSequenceNumber, path_buf: PathBuf) -> Result<u64> {
         debug!("cleaning processed files, watermark is {}", watermark);
         let mut removed: u64 = 0;
-        for entry in fs::read_dir(self.path.clone())? {
+        for entry in fs::read_dir(path_buf)? {
             let entry = entry?;
             let filename = entry.file_name();
             if let Some(sequence_number) = Self::checkpoint_number_from_file_path(&filename) {

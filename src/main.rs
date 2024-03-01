@@ -1,5 +1,6 @@
 use std::str::FromStr;
 use std::sync::Arc;
+use std::thread;
 use std::thread::sleep;
 use std::time::{Duration};
 use sui_types::base_types::ObjectID;
@@ -62,15 +63,16 @@ fn main(){
     let mut reader = CheckpointReader{ path: "/mnt/sui/ingestion".parse().unwrap(), current_checkpoint_number: cli.start };
     loop {
         debug!("fetching file");
-        let files = reader.read_all_files();
-        if files.len() == 0 {
+        let checkpoints = reader.read_local_files().unwrap();
+        if checkpoints.len() == 0 {
             sleep(Duration::from_millis(100));
             debug!("No files to process ...");
             continue
         }
-        for (number, path) in files.iter() {
+        for checkpoint_data in checkpoints.iter() {
             // TODO process
-            let checkpoint_data = reader.read_checkpoint(path).unwrap();
+            let number = checkpoint_data.checkpoint_summary.sequence_number.clone();
+            // let checkpoint_data = reader.read_checkpoint(path).unwrap();
             let result = process_txn(&checkpoint_data, &filter);
             if result.len() > 0 {
                 // TODO send to redis or mongodb via crossbeam channel
@@ -94,9 +96,14 @@ fn main(){
                 client.set::<u64, u64, u64>(0_u64, checkpoint_number, None, None, false).await;
                 // return client.connect().await.unwrap();
             }});
-            reader.gc_processed_files(reader.current_checkpoint_number);
-            debug!("checkpoint processed: {}", reader.current_checkpoint_number);
-            reader.current_checkpoint_number = number.clone();
+            debug!("checkpoint processed: {}", number);
+            reader.current_checkpoint_number = number;
         }
+        let number = reader.current_checkpoint_number.clone();
+        let path = reader.path.clone();
+        thread::spawn( move ||
+            {
+            CheckpointReader::gc_processed_files(number, path);
+        });
     }
 }
