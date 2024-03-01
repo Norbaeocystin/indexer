@@ -1,22 +1,12 @@
 use anyhow::Result;
-// use futures::future::try_join_all;
-// use notify::RecursiveMode;
-// use notify::Watcher;
-// use object_store::path::Path;
-// use object_store::{parse_url_opts, ObjectStore};
 use std::ffi::OsString;
 use std::fs;
 use std::path::PathBuf;
-use std::time::{Duration, SystemTime};
+use std::time::SystemTime;
 use sui_storage::blob::Blob;
 use sui_types::full_checkpoint_content::CheckpointData;
 use sui_types::messages_checkpoint::CheckpointSequenceNumber;
-use tokio::sync::mpsc;
-use tokio::sync::oneshot;
-use tokio::time::timeout;
 use log::{debug, info};
-// use tracing::{debug, info};
-// use url::Url;
 
 pub(crate) const ENV_VAR_LOCAL_READ_TIMEOUT_MS: &str = "LOCAL_READ_TIMEOUT_MS";
 

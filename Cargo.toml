@@ -15,21 +15,20 @@ path = "src/main.rs"
 
 [dependencies]
 anyhow = "1.0.71"
-async-trait = { version = "0.1.77", features = [] }
 sui-data-ingestion = { git = "https://github.com/MystenLabs/sui"}
 sui-data-ingestion-core = { git = "https://github.com/MystenLabs/sui"}
 sui-types = { git = "https://github.com/MystenLabs/sui"}
 sui-storage = { git = "https://github.com/MystenLabs/sui"}
-tokio = { version = "1.36.0", features = [] }
-prometheus = "0.13.3"
-mongodb = "2.8.1"
+tokio = { version = "1.36.0", features = ["rt-multi-thread"] }
+# mongodb = "2.8.1"
 serde = { version = "1.0.197", features = ["derive"] }
 bcs = "0.1.6"
 clap = { version = "4.3.11", features = ["derive"] }
-libc = { version = "0.2.153", features = [] }
+# libc = { version = "0.2.153", features = [] }
 fred = "8.0.4"
 log = { version = "0.4.19", features = [] }
 env_logger = "0.10.0"
+serde_json = "1.0.114"
 
 
 [dev-dependencies]

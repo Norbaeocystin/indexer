@@ -1,28 +1,19 @@
-use std::path::PathBuf;
 use std::str::FromStr;
-use std::time::{SystemTime, UNIX_EPOCH};
-use async_trait::async_trait;
-use tokio::sync::oneshot;
-use sui_data_ingestion_core::{DataIngestionMetrics, ProgressStore, IndexerExecutor, Worker, WorkerPool};
-use sui_types::full_checkpoint_content::CheckpointData;
-use anyhow::Result;
+use std::sync::Arc;
+use std::thread::sleep;
+use std::time::{Duration};
 use sui_types::base_types::ObjectID;
-use prometheus::{Registry};
-use sui_types::messages_checkpoint::CheckpointSequenceNumber;
-use mongodb::{bson::doc, Client, Cursor};
-use mongodb::options::{InsertOneOptions};
 use serde::{Deserialize, Serialize};
 use bcs;
-use tokio::fs::{File, OpenOptions};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use libc;
 use fred::prelude::*;
 use fred::prelude::ServerConfig::Centralized;
 use fred::types::RespVersion;
-use log::{info, LevelFilter};
+use log::{debug, info, LevelFilter};
 use reader::CheckpointReader;
 use clap::Parser;
-use clap::ArgAction;
+use tokio::runtime::Builder;
+use crate::events::process_txn;
 
 pub mod events;
 pub mod reader;
@@ -33,84 +24,76 @@ struct Cli {
     path: String,
     #[arg(short, long, action)]
     debug: bool,
-
-}
-
-struct CustomWorker {
-    // TODO add names to objects
-    ids: Vec<ObjectID>,
-    mongodb_client: Client,
-}
-
-struct DummyProgressStore{
-    redis_client: RedisClient,
-}
-
-#[derive(Serialize)]
-struct Progress {
-    checkpoint: i64,
-    _id: i64,
-    name: String,
-}
-
-#[async_trait]
-impl ProgressStore for DummyProgressStore {
-    async fn load(&mut self, task_name: String) -> Result<CheckpointSequenceNumber> {
-        let result = self.redis_client.get(0_u64).await;
-        return Ok(result.unwrap_or(0_u64));
-        // let mut file = OpenOptions::new().read(true).open("/tmp/checkpoint").await;
-        // if file.is_err() {
-        //     return Ok(0);
-        // } else {
-        //     let mut buffer = [0_u8; 8];
-        //     file.unwrap().read(&mut buffer).await;
-        //     return Ok(u64::from_be_bytes(buffer))
-        // }
-        // return Ok(0);
-        // let mut cursor: Cursor<Progress> = self.mongodb_client.database("indexer").collection("progress").find(None, None).await.unwrap();
-        // while cursor.advance().await.unwrap_or(false) {
-        //     return Ok(cursor.current().get("checkpoint").unwrap().unwrap().as_i64().unwrap() as u64)
-        // }
-        return Ok(0);
-    }
-
-    async fn save(
-        &mut self,
-        task_name: String,
-        checkpoint_number: CheckpointSequenceNumber,
-    ) -> Result<()> {
-        self.redis_client.set::<u64, u64, u64>(0_u64, checkpoint_number, None, None, false).await;
-        return Ok(());
-        // let mut file = OpenOptions::new().write(true).custom_flags(libc::O_CREAT).custom_flags(libc::O_EXCL).open("/tmp/checkpoint").await.unwrap();
-        // file.write_all(&checkpoint_number.to_be_bytes()).await;
-        // return Ok(())
-        // TODO too slow
-        // let _opts = InsertOneOptions::builder()
-        //     .bypass_document_validation(true)
-        //     .build();
-        // let data = Progress{ checkpoint: checkpoint_number as i64, _id: 1, name: task_name };
-        // self.mongodb_client.database("indexer").collection::<Progress>("progress").delete_one(doc! {"_id":1}, None).await;
-        // self.mongodb_client.database("indexer").collection::<Progress>("progress").insert_one(data, _opts ).await;
-        // Ok(())
-    }
-}
-
-#[derive(Serialize)]
-struct Point {
-    data: Vec<u8>,
-    digest: String,
-    timestamp: u64,
-    index: usize
+    #[arg(short,long, default_value_t=0)]
+    start: u64,
 }
 
 fn main(){
+    let filter = vec![ObjectID::from_str("0xefe8b36d5b2e43728cc323298626b83177803521d195cfb11e15b910e892fddf").unwrap(),
+                      ObjectID::from_str("0xc38f849e81cfe46d4e4320f508ea7dda42934a329d5a6571bb4c3cb6ea63f5da").unwrap(),
+    ];
     let cli = Cli::parse();
     if cli.debug {
         env_logger::builder().filter_level(LevelFilter::Debug).init();
     } else {
         env_logger::builder().filter_level(LevelFilter::Info).init();
     }
-    let reader = CheckpointReader{ path: "/mnt/sui/ingestion".parse().unwrap(), current_checkpoint_number: 0 };
-    let files = reader.read_local_files().unwrap();
-    // info!()
+    let runtime = Builder::new_multi_thread().enable_all().worker_threads(8).build().unwrap();
+    let client = Arc::new(RedisClient::new(RedisConfig{
+        fail_fast: false,
+        blocking: Blocking::Interrupt,
+        username: None,
+        password: None,
+        server: Centralized{
+            server: Server {
+                host: "localhost".parse().unwrap(),
+                port: 6379,
+            }
+        },
+        version: RespVersion::RESP2,
+        database: Some(0),
+    }, Some(PerformanceConfig::default()), Some(ConnectionConfig::default()), Some(ReconnectPolicy::default())));
+    let _ = client.connect();
+    let _ = runtime.block_on(async {
+        client.wait_for_connect().await
+    });
+    let mut reader = CheckpointReader{ path: "/mnt/sui/ingestion".parse().unwrap(), current_checkpoint_number: cli.start };
+    loop {
+        let files = reader.read_all_files();
+        if files.len() > 0 {
+            sleep(Duration::from_millis(100));
+            debug!("No files to process ...");
+            continue
+        }
+        for (number, path) in files.iter() {
+            // TODO process
+            let checkpoint_data = reader.read_checkpoint(path).unwrap();
+            let result = process_txn(&checkpoint_data, &filter);
+            if result.len() > 0 {
+                // TODO send to redis or mongodb via crossbeam channel
+                runtime.spawn({
+                    let client = client.clone();
+                    async move {
+                        for (digest, data) in result {
+                            let result = serde_json::to_string(&data).unwrap();
+                            client.set::<String, String, String>(digest.clone(), result, None, None, false).await;
+                            debug!("inserting data: {}", digest);
+                        }
+                        // return client.connect().await.unwrap();
+                    }});
+            }
+            // TODO progressor
+            runtime.spawn({
+            let client = client.clone();
+                let checkpoint_number = number.clone();
+            async move {
+                info!("conecting redis client");
+                client.set::<u64, u64, u64>(0_u64, checkpoint_number, None, None, false).await;
+                // return client.connect().await.unwrap();
+            }});
+            reader.gc_processed_files(reader.current_checkpoint_number);
+            debug!("checkpoint processed: {}", reader.current_checkpoint_number);
+            reader.current_checkpoint_number = number.clone();
+        }
+    }
 }

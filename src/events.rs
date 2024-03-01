@@ -1,6 +1,39 @@
 use serde::{Deserialize, Serialize};
-use sui_types::base_types::SuiAddress;
+use sui_types::base_types::{ObjectID, SuiAddress};
+use sui_types::full_checkpoint_content::CheckpointData;
 use sui_types::id::ID;
+
+#[derive(Serialize,Deserialize,Debug)]
+pub struct IndexerData {
+    pub digest: String,
+    pub checkpoint_timestamp: u64,
+    pub epoch: u64,
+    pub data: Vec<u8>,
+    pub index: u64,
+}
+
+
+pub fn process_txn(data: &CheckpointData, filter: &Vec<ObjectID>) -> Vec<(String, IndexerData)>{
+    let mut results = vec![];
+    for txn in data.transactions.iter() {
+        for events in txn.events.iter() {
+            for (idx, event) in events.data.iter().enumerate() {
+                if filter.contains(&event.package_id) {
+                    let digest = txn.transaction.digest().to_string();
+                    let result = IndexerData{
+                        digest: digest.clone(),
+                        checkpoint_timestamp: data.checkpoint_summary.timestamp_ms.try_into().unwrap(),
+                        epoch: data.checkpoint_summary.epoch.try_into().unwrap(),
+                        data: event.contents.clone(),
+                        index: idx as u64,
+                    };
+                    results.push((digest, result));
+                }
+            }
+        }
+    }
+    return results;
+}
 
 #[derive(Serialize,Deserialize,Debug)]
 struct BorrowEvent {
