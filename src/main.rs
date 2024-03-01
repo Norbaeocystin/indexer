@@ -63,7 +63,7 @@ fn main(){
     loop {
         debug!("fetching file");
         let files = reader.read_all_files();
-        if files.len() > 0 {
+        if files.len() == 0 {
             sleep(Duration::from_millis(100));
             debug!("No files to process ...");
             continue
