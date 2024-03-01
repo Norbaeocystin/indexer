@@ -7004,6 +7004,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "bcs",
+ "clap",
  "mongodb",
  "prometheus",
  "serde",

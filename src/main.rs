@@ -12,17 +12,17 @@ use sui_types::messages_checkpoint::CheckpointSequenceNumber;
 use mongodb::{bson::doc, Client, Cursor};
 use mongodb::options::{InsertOneOptions};
 use serde::{Deserialize, Serialize};
-use sui_types::TypeTag;
 use bcs;
-use mongodb::bson::spec::BinarySubtype::Uuid;
+use clap::Parser;
 
+#[derive(Parser)]
+struct Cli {
+    #[arg(short,long, default_value = "mongodb://localhost:27017")]
+    mongo_uri: String,
+
+}
 pub mod events;
 
-
-#[derive(Serialize,Deserialize)]
-struct Event {
-    name: TypeTag,
-}
 struct CustomWorker {
     // TODO add names to objects
     ids: Vec<ObjectID>,
@@ -103,13 +103,14 @@ impl Worker for CustomWorker {
 
 #[tokio::main]
 async fn main() -> Result<()>{
+    let cli = Cli::parse();
     let (exit_sender, exit_receiver) = oneshot::channel();
     let metrics = DataIngestionMetrics::new(&Registry::new());
-    let progress_store = DummyProgressStore{mongodb_client: Client::with_uri_str("mongodb://localhost:27017").await.unwrap()}; // FileProgressStore::new(PathBuf::from("/tmp/checkpoint"));
+    let progress_store = DummyProgressStore{mongodb_client: Client::with_uri_str(cli.mongo_uri).await.unwrap()}; // FileProgressStore::new(PathBuf::from("/tmp/checkpoint"));
     // let progress_store = DummyProgressStore;
     let custom_worker = CustomWorker{ ids: vec![ObjectID::from_str("0xefe8b36d5b2e43728cc323298626b83177803521d195cfb11e15b910e892fddf").unwrap(),
     ObjectID::from_str("0xc38f849e81cfe46d4e4320f508ea7dda42934a329d5a6571bb4c3cb6ea63f5da").unwrap(),
-    ], mongodb_client: Client::with_uri_str("mongodb://localhost:27017").await.unwrap() };
+    ], mongodb_client: Client::with_uri_str(cli.mongo_uri.clone()).await.unwrap() };
     let mut executor = IndexerExecutor::new(progress_store, 1 /* number of workflow types */, metrics);
     let worker_pool = WorkerPool::new(custom_worker, "custom worker".to_string(), 100);
     executor.register(worker_pool).await?;
