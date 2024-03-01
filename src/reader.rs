@@ -51,7 +51,7 @@ impl CheckpointReader {
             }
         }
         files.sort();
-        debug!("unprocessed local files {:?}", files);
+        // debug!("unprocessed local files {:?}", files);
         let mut checkpoints = vec![];
         for (_, filename) in files.iter().take(MAX_CHECKPOINTS_IN_PROGRESS) {
             let checkpoint = Blob::from_bytes::<CheckpointData>(&fs::read(filename)?)?;
