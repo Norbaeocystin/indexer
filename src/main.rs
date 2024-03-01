@@ -112,5 +112,5 @@ fn main(){
     }
     let reader = CheckpointReader{ path: "/mnt/sui/ingestion".parse().unwrap(), current_checkpoint_number: 0 };
     let files = reader.read_local_files().unwrap();
-    info!()
+    // info!()
 }
