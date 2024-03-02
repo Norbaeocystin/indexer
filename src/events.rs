@@ -1,13 +1,39 @@
 use bcs::from_bytes;
+use log::warn;
 use serde::{Deserialize, Serialize};
 use sui_types::base_types::{ObjectID, SuiAddress};
 use sui_types::full_checkpoint_content::CheckpointData;
 use sui_types::id::ID;
 
+#[derive(Serialize,Deserialize,Debug)]
+enum ScallopEvent {
+    BorrowEvent(BorrowEvent),
+    BorrowEventV2(BorrowEventV2),
+    BorrowFlashloanEvent(BorrowFlashLoanEvent),
+    CollateralDepositEvent(CollateralDepositEvent),
+    CollateralWithdrawEvent(CollateralWithdrawEvent),
+    LiquidateEvent(LiquidateEvent),
+    MintEvent(MintEvent),
+    ObligationCreatedEvent(ObligationCreatedEvent),
+    ObligationLocked(ObligationLocked),
+    ObligationUnlocked(ObligationUnlocked),
+    RepayEvent(RepayEvent),
+    RepayFlashLoanEvent(RepayFlashLoanEvent),
+}
+
+
 // in this moment not sure if the events have constant size ...
-pub fn parse(bytes: &[u8]){
+pub fn parse(bytes: &[u8], type_: String){
+    match type_.as_str() {
+        "BorrowEvent" => {
+            let borrow_event = from_bytes::<BorrowEvent>(&bytes);
+        }
+        _ => {
+            warn!("pattern for parsing event not found ...")
+        }
+    }
     let borrow_event = from_bytes::<BorrowEvent>(&bytes);
-    let borrow_event = from_bytes::<BorrowFlashLoanEvent>(&bytes);
+    let borrow_flashloan_event = from_bytes::<BorrowFlashLoanEvent>(&bytes);
     let borrow_eventv2 = from_bytes::<BorrowEventV2>(&bytes);
     let deposit_event = from_bytes::<CollateralDepositEvent>(&bytes);
     let withdraw_event = from_bytes::<CollateralWithdrawEvent>(&bytes);
