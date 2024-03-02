@@ -6914,6 +6914,7 @@ dependencies = [
  "clap",
  "env_logger",
  "fred",
+ "futures",
  "log",
  "reqwest",
  "serde",

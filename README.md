@@ -30,3 +30,15 @@ WantedBy=multi-user.target
 
 6769021 23:31
 6800301 23:41
+
+10:46 7744606
+11:39 7809741
+curl --location --request POST 'https://fullnode.mainnet.sui.io:443/' --header 'Content-Type: application/json' --data-raw
+'{
+"jsonrpc": "2.0",
+"id": 1,
+"method": "suix_getLatestSuiSystemState",
+"params": []
+}'
+
+- "/dns/sui-main.astrostakers.com/udp/8084", -Netherlands
