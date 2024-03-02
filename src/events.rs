@@ -25,7 +25,7 @@ enum ScallopEvent {
 
 
 // in this moment not sure if the events have constant size ...
-pub fn parse(bytes: &[u8], type_: String) -> Option<ScallopEvent> {
+pub fn parse(bytes: &[u8], type_: &str) -> Option<ScallopEvent> {
     let result = type_.split("::").last().unwrap();
     match result {
         "BorrowEvent" => {
@@ -97,6 +97,11 @@ pub struct IndexerData {
     pub type_: String,
 }
 
+impl IndexerData {
+    pub fn parse_event(&self) -> Option<ScallopEvent> {
+        return parse(&self.data, self.type_);
+    }
+}
 
 pub fn process_txn(data: &CheckpointData, filter: &Vec<ObjectID>) -> Vec<(String, IndexerData)>{
     let mut results = vec![];
