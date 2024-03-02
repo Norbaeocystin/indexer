@@ -28,6 +28,8 @@ struct Cli {
     debug: bool,
     #[arg(short,long, default_value_t=0)]
     start: u64,
+    #[arg(short,long, default_value_t=0)]
+    db: u8,
 }
 
 fn main(){
@@ -54,7 +56,7 @@ fn main(){
             }
         },
         version: RespVersion::RESP2,
-        database: Some(0),
+        database: Some(cli.db),
     }, Some(PerformanceConfig::default()), Some(ConnectionConfig::default()), Some(ReconnectPolicy::default())));
     let _ = runtime.block_on(async {
         let _ = client.connect();

@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 use sui_types::base_types::{ObjectID, SuiAddress};
 use sui_types::full_checkpoint_content::CheckpointData;
 use sui_types::id::ID;
-use crate::events::ScallopEvent::BorrowFlashloanEvent;
 
 #[derive(Serialize,Deserialize,Debug)]
 enum ScallopEvent {
