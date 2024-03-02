@@ -119,7 +119,7 @@ fn main(){
                 client.set::<u64, u64, u64>(0_u64, checkpoint_number, None, None, false).await;
                 // return client.connect().await.unwrap();
             }});
-            debug!("checkpoint processed: {}", number);
+            info!("checkpoint processed: {}", number);
             let file_path = format!("{}/{}.chk", cli.path, reader.current_checkpoint_number );
             remove_file(file_path);
             reader.current_checkpoint_number = number;
