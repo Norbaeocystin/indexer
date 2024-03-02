@@ -55,6 +55,7 @@ pub fn parse(bytes: &[u8], type_: &str) -> Option<(ScallopEvent, String, Option<
             let event = from_bytes::<MintEvent>(&bytes).unwrap();
             return Some((ScallopEvent::MintEvent(event), result.to_string(), None ));
         }
+        // ObligationCreated too ...
         "ObligationCreatedEvent" => {
             let event = from_bytes::<ObligationCreatedEvent>(&bytes).unwrap();
             return Some((ScallopEvent::ObligationCreatedEvent(event.clone()), result.to_string(), Some(event.obligation.bytes.to_string())));

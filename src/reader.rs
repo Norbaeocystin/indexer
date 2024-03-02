@@ -1,12 +1,15 @@
 use anyhow::Result;
 use std::ffi::OsString;
 use std::fs;
+use std::io::{Cursor};
 use std::path::PathBuf;
 use std::time::SystemTime;
 use sui_storage::blob::Blob;
 use sui_types::full_checkpoint_content::CheckpointData;
 use sui_types::messages_checkpoint::CheckpointSequenceNumber;
-use log::{debug, info};
+use log::{debug, info, warn};
+use bytes::Bytes;
+use tokio::sync::mpsc;
 
 pub(crate) const ENV_VAR_LOCAL_READ_TIMEOUT_MS: &str = "LOCAL_READ_TIMEOUT_MS";
 
@@ -96,4 +99,37 @@ impl CheckpointReader {
             .and_then(|s| s.rfind('.').map(|pos| &s[..pos]))
             .and_then(|s| s.parse().ok())
     }
+
+    pub async fn fetch_from_external_interval(start_checkpoint: u64, end_checkpoint: u64) -> Vec<(Option<Bytes>, u64)>{
+        let (tx, mut rx) = mpsc::unbounded_channel();
+        for i in start_checkpoint..end_checkpoint {
+            let txc = tx.clone();
+            let i = i.clone();
+            tokio::spawn(async move {
+                // println!("receiver dropped");
+                let checkpoint_file = format!("{}.chk", i);
+                let url = format!("https://checkpoints.mainnet.sui.io/{checkpoint_file}");
+                let response = reqwest::get(url).await;
+                println!("sending");
+                txc.send((response, i));
+            });
+            }
+            let mut bytes_and_checkpoint_number = vec![];
+            for i in start_checkpoint..end_checkpoint {
+                let result =  rx.recv().await;
+                if result.is_some() {
+                    let (response, checkpoint_number) = result.unwrap();
+                    if response.is_ok() {
+                        let res = response.unwrap();
+                        let bytes = res.bytes().await.unwrap();
+                        bytes_and_checkpoint_number.push((Some(bytes), checkpoint_number));
+                    } else {
+                        warn!("{:?}", response.err());
+                        bytes_and_checkpoint_number.push((None, checkpoint_number))
+                    }
+                };
+            }
+            return bytes_and_checkpoint_number;
+        }
+
 }

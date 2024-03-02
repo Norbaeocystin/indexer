@@ -63,7 +63,7 @@ fn main(){
         client.wait_for_connect().await
     });
     info!("preparing redis done");
-    let mut reader = CheckpointReader{ path: "/mnt/sui/ingestion".parse().unwrap(), current_checkpoint_number: cli.start };
+    let mut reader = CheckpointReader{ path: cli.path.parse().unwrap(), current_checkpoint_number: cli.start };
     loop {
         debug!("fetching file");
         // race condition?

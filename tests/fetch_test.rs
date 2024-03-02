@@ -1,9 +1,10 @@
 use std::fmt::format;
 use std::fs;
+use std::sync::Arc;
 use reqwest;
 use std::io::Cursor;
 use std::str::FromStr;
-use std::time::SystemTime;
+use std::time::{Duration, SystemTime};
 use sui_storage::blob::Blob;
 use sui_types::base_types::ObjectID;
 use sui_types::full_checkpoint_content::CheckpointData;
@@ -14,6 +15,10 @@ use futures;
 use futures::future::join_all;
 use reqwest::Response;
 use reqwest::Result;
+use tokio::sync::mpsc;
+use tokio::sync::mpsc::Sender;
+use tokio::time::sleep;
+use sui_indexer::reader::CheckpointReader;
 
 // type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 #[tokio::test]
@@ -21,8 +26,20 @@ async fn fetch_checkpoint(){
     // let url = "https://checkpoints.mainnet.sui.io/27668100.chk";
     // let response = reqwest::get(url).await;
     let start = SystemTime::now();
+    let result = CheckpointReader::fetch_from_external_interval(27668000, 27668200).await;
+    for (bytes, number) in result.iter(){
+        if bytes.is_some() {
+            let data = Blob::from_bytes::<CheckpointData>(&*bytes.as_ref().unwrap()).unwrap();
+            println!("{} {}", data.checkpoint_summary.sequence_number, number);
+        } else {
+            println!("no data error {}", number);
+        }
+    }
+    println!("took: {}", start.elapsed().unwrap().as_millis());
+    sleep(Duration::from_millis(1_000_000)).await;
+    let start = SystemTime::now();
     let mut fts = vec![];
-    let mut idx = 200;
+    let mut idx = 10;
     while idx > 0 {
         let checkpoint_file = format!("{}.chk", 27668100 + idx);
         let url = format!("https://checkpoints.mainnet.sui.io/{checkpoint_file}");
