@@ -31,6 +31,24 @@ const MAX_CHECKPOINTS_IN_PROGRESS: usize = 10000;
 
 impl CheckpointReader {
 
+    pub fn read_batch_of_files(&self, batch_size: usize) -> Vec<(CheckpointSequenceNumber, PathBuf)>{
+        let start = SystemTime::now();
+        let mut files = vec![];
+        for entry in fs::read_dir(self.path.clone()).unwrap() {
+            if files.len() >= batch_size {
+                break
+            }
+            let entry = entry.unwrap();
+            let filename = entry.file_name();
+            if let Some(sequence_number) = Self::checkpoint_number_from_file_path(&filename) {
+                if sequence_number >= self.current_checkpoint_number {
+                    files.push((sequence_number, entry.path()));
+                }
+            }
+        }
+        debug!("all checkpoint files: {} took: {} ms", files.len(), start.elapsed().unwrap().as_millis());
+        return files;
+    }
     // return all files
     pub fn read_all_files(&self) -> Vec<(CheckpointSequenceNumber, PathBuf)>{
         let start = SystemTime::now();

@@ -30,6 +30,8 @@ struct Cli {
     start: u64,
     #[arg(short,long, default_value_t=0)]
     db: u8,
+    #[arg(short,long, default_value_t=0)]
+    batch: u64,
 }
 
 fn main(){
@@ -67,7 +69,7 @@ fn main(){
     loop {
         debug!("fetching file");
         // race condition?
-        let file_response = reader.read_local_files();
+        let file_response =  if cli.batch > 0 {reader.read_batch_of_files(cli.batch.clone() as usize)} else {reader.read_all_files()};
         if file_response.is_err() {
             sleep(Duration::from_millis(100));
             warn!("something bad happened");
@@ -124,11 +126,11 @@ fn main(){
             remove_file(file_path);
             reader.current_checkpoint_number = number;
         }
-        let number = reader.current_checkpoint_number.clone();
-        let path = reader.path.clone();
-        thread::spawn( move ||
-            {
-            CheckpointReader::gc_processed_files(number, path);
-        });
+        // let number = reader.current_checkpoint_number.clone();
+        // let path = reader.path.clone();
+        // thread::spawn( move ||
+        //     {
+        //     CheckpointReader::gc_processed_files(number, path);
+        // });
     }
 }
