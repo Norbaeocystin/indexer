@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use sui_types::base_types::{ObjectID, SuiAddress};
 use sui_types::full_checkpoint_content::CheckpointData;
 use sui_types::id::ID;
+use crate::events::ScallopEvent::BorrowFlashloanEvent;
 
 #[derive(Serialize,Deserialize,Debug)]
 enum ScallopEvent {
@@ -17,34 +18,73 @@ enum ScallopEvent {
     ObligationCreatedEvent(ObligationCreatedEvent),
     ObligationLocked(ObligationLocked),
     ObligationUnlocked(ObligationUnlocked),
+    RedeemEvent(RedeemEvent),
     RepayEvent(RepayEvent),
     RepayFlashLoanEvent(RepayFlashLoanEvent),
 }
 
 
 // in this moment not sure if the events have constant size ...
-pub fn parse(bytes: &[u8], type_: String){
-    match type_.as_str() {
+pub fn parse(bytes: &[u8], type_: String) -> Option<ScallopEvent> {
+    let result = type_.split("::").last().unwrap();
+    match result {
         "BorrowEvent" => {
-            let borrow_event = from_bytes::<BorrowEvent>(&bytes);
+            let event = from_bytes::<BorrowEvent>(&bytes).unwrap();
+            return Some(ScallopEvent::BorrowEvent(event));
+        }
+        "BorrowFlashLoanEvent" => {
+            let event = from_bytes::<BorrowFlashloanEvent>(&bytes).unwrap();
+            return Some(ScallopEvent::BorrowFlashloanEvent(event));
+        }
+        "BorrowEventV2" => {
+            let event = from_bytes::<BorrowEventV2>(&bytes).unwrap();
+            return Some(ScallopEvent::BorrowEventV2(event));
+        }
+        "CollateralDepositEvent" => {
+            let event = from_bytes::<CollateralDepositEvent>(&bytes).unwrap();
+            return Some(ScallopEvent::CollateralDepositEvent(event));
+        }
+        "CollateralWithdrawEvent" => {
+            let event = from_bytes::<CollateralWithdrawEvent>(&bytes).unwrap();
+            return Some(ScallopEvent::CollateralWithdrawEvent(event));
+        }
+        "LiquidateEvent" => {
+            let event = from_bytes::<LiquidateEvent>(&bytes).unwrap();
+            return Some(ScallopEvent::LiquidateEvent(event));
+        }
+        "MintEvent" => {
+            let event = from_bytes::<MintEvent>(&bytes).unwrap();
+            return Some(ScallopEvent::MintEvent(event));
+        }
+        "ObligationCreatedEvent" => {
+            let event = from_bytes::<ObligationCreatedEvent>(&bytes).unwrap();
+            return Some(ScallopEvent::ObligationCreatedEvent(event));
+        }
+        "ObligationLocked" => {
+            let event = from_bytes::<ObligationLocked>(&bytes).unwrap();
+            return Some(ScallopEvent::ObligationLocked(event));
+        }
+        "ObligationUnlocked" => {
+            let event = from_bytes::<ObligationUnlocked>(&bytes).unwrap();
+            return Some(ScallopEvent::ObligationUnlocked(event));
+        }
+        "RedeemEvent" => {
+            let event = from_bytes::<RedeemEvent>(&bytes).unwrap();
+            return Some(ScallopEvent::RedeemEvent(event));
+        }
+        "RepayEvent" => {
+            let event = from_bytes::<RepayEvent>(&bytes).unwrap();
+            return Some(ScallopEvent::RepayEvent(event));
+        }
+        "RepayFlashLoanEvent" => {
+            let event = from_bytes::<RepayFlashLoanEvent>(&bytes).unwrap();
+            return Some(ScallopEvent::RepayFlashLoanEvent(event));
         }
         _ => {
             warn!("pattern for parsing event not found ...")
         }
     }
-    let borrow_event = from_bytes::<BorrowEvent>(&bytes);
-    let borrow_flashloan_event = from_bytes::<BorrowFlashLoanEvent>(&bytes);
-    let borrow_eventv2 = from_bytes::<BorrowEventV2>(&bytes);
-    let deposit_event = from_bytes::<CollateralDepositEvent>(&bytes);
-    let withdraw_event = from_bytes::<CollateralWithdrawEvent>(&bytes);
-    let liquidate_event = from_bytes::<LiquidateEvent>(&bytes);
-    let mint_event = from_bytes::<MintEvent>(&bytes);
-    let obligation_created_event = from_bytes::<ObligationCreatedEvent>(&bytes);
-    let obligation_locked_event = from_bytes::<ObligationLocked>(&bytes);
-    let obligation_unlocked_event = from_bytes::<ObligationUnlocked>(&bytes);
-    let redeem_event = from_bytes::<RedeemEvent>(&bytes);
-    let repay_event = from_bytes::<RepayEvent>(&bytes);
-    let repay_floshloan_event = from_bytes::<RepayFlashLoanEvent>(&bytes);
+    return None;
 }
 
 #[derive(Serialize,Deserialize,Debug)]
