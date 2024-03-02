@@ -3743,6 +3743,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "mirai-annotations"
+version = "1.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c9be0862c1b3f26a88803c4a49de6889c10e608b3ee9344e6ef5b45fb37ad3d1"
+
+[[package]]
 name = "mockall"
 version = "0.11.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3781,7 +3787,7 @@ source = "git+https://github.com/MystenLabs/sui#4bc3a76650ab5bf7d188f75deaab0144
 dependencies = [
  "anyhow",
  "enum-compat-util",
- "move-core-types",
+ "move-core-types 0.0.4",
  "move-proc-macros",
  "ref-cast",
  "serde",
@@ -3802,7 +3808,7 @@ dependencies = [
  "bcs",
  "move-binary-format",
  "move-command-line-common",
- "move-core-types",
+ "move-core-types 0.0.4",
  "move-ir-types",
  "move-symbol-pool",
  "serde",
@@ -3815,7 +3821,7 @@ source = "git+https://github.com/MystenLabs/sui#4bc3a76650ab5bf7d188f75deaab0144
 dependencies = [
  "anyhow",
  "move-binary-format",
- "move-core-types",
+ "move-core-types 0.0.4",
  "petgraph 0.5.1",
  "serde-reflection",
 ]
@@ -3828,7 +3834,7 @@ dependencies = [
  "move-abstract-stack",
  "move-binary-format",
  "move-borrow-graph",
- "move-core-types",
+ "move-core-types 0.0.4",
  "move-vm-config",
  "petgraph 0.5.1",
 ]
@@ -3842,7 +3848,7 @@ dependencies = [
  "difference",
  "dirs-next",
  "hex",
- "move-core-types",
+ "move-core-types 0.0.4",
  "num-bigint 0.4.4",
  "once_cell",
  "serde",
@@ -3865,7 +3871,7 @@ dependencies = [
  "move-bytecode-source-map",
  "move-bytecode-verifier",
  "move-command-line-common",
- "move-core-types",
+ "move-core-types 0.0.4",
  "move-ir-to-bytecode",
  "move-ir-types",
  "move-symbol-pool",
@@ -3875,6 +3881,23 @@ dependencies = [
  "serde",
  "stacker",
  "tempfile",
+]
+
+[[package]]
+name = "move-core-types"
+version = "0.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5098d3772a49a07680bfedfba10219c4f8163acf5bf56f1e4abd9f8df46b9a1f"
+dependencies = [
+ "anyhow",
+ "bcs",
+ "hex",
+ "mirai-annotations",
+ "once_cell",
+ "rand",
+ "ref-cast",
+ "serde",
+ "serde_bytes",
 ]
 
 [[package]]
@@ -3911,7 +3934,7 @@ dependencies = [
  "move-binary-format",
  "move-bytecode-source-map",
  "move-command-line-common",
- "move-core-types",
+ "move-core-types 0.0.4",
  "move-ir-types",
  "petgraph 0.5.1",
  "serde",
@@ -3931,7 +3954,7 @@ dependencies = [
  "move-bytecode-source-map",
  "move-command-line-common",
  "move-compiler",
- "move-core-types",
+ "move-core-types 0.0.4",
  "move-coverage",
  "move-ir-types",
 ]
@@ -3965,7 +3988,7 @@ dependencies = [
  "move-binary-format",
  "move-bytecode-source-map",
  "move-command-line-common",
- "move-core-types",
+ "move-core-types 0.0.4",
  "move-ir-to-bytecode-syntax",
  "move-ir-types",
  "move-symbol-pool",
@@ -3980,7 +4003,7 @@ dependencies = [
  "anyhow",
  "hex",
  "move-command-line-common",
- "move-core-types",
+ "move-core-types 0.0.4",
  "move-ir-types",
  "move-symbol-pool",
 ]
@@ -3992,7 +4015,7 @@ source = "git+https://github.com/MystenLabs/sui#4bc3a76650ab5bf7d188f75deaab0144
 dependencies = [
  "hex",
  "move-command-line-common",
- "move-core-types",
+ "move-core-types 0.0.4",
  "move-symbol-pool",
  "once_cell",
  "serde",
@@ -4013,7 +4036,7 @@ dependencies = [
  "move-bytecode-source-map",
  "move-command-line-common",
  "move-compiler",
- "move-core-types",
+ "move-core-types 0.0.4",
  "move-disassembler",
  "move-ir-types",
  "move-symbol-pool",
@@ -4037,7 +4060,7 @@ dependencies = [
  "move-bytecode-utils",
  "move-command-line-common",
  "move-compiler",
- "move-core-types",
+ "move-core-types 0.0.4",
  "move-docgen",
  "move-model",
  "move-symbol-pool",
@@ -4104,7 +4127,7 @@ source = "git+https://github.com/MystenLabs/sui#4bc3a76650ab5bf7d188f75deaab0144
 dependencies = [
  "anyhow",
  "move-binary-format",
- "move-core-types",
+ "move-core-types 0.0.4",
  "move-vm-profiler",
  "move-vm-types",
  "once_cell",
@@ -4118,7 +4141,7 @@ source = "git+https://github.com/MystenLabs/sui#4bc3a76650ab5bf7d188f75deaab0144
 dependencies = [
  "bcs",
  "move-binary-format",
- "move-core-types",
+ "move-core-types 0.0.4",
  "move-vm-profiler",
  "serde",
  "smallvec",
@@ -6809,7 +6832,7 @@ dependencies = [
  "anyhow",
  "bcs",
  "move-binary-format",
- "move-core-types",
+ "move-core-types 0.0.4",
  "move-package",
  "once_cell",
  "serde",
@@ -6828,6 +6851,7 @@ dependencies = [
  "env_logger",
  "fred",
  "log",
+ "move-core-types 0.0.3",
  "serde",
  "serde_json",
  "sui-data-ingestion",
@@ -6847,7 +6871,7 @@ dependencies = [
  "fastcrypto",
  "move-binary-format",
  "move-bytecode-utils",
- "move-core-types",
+ "move-core-types 0.0.4",
  "schemars",
  "serde",
  "serde_json",
@@ -6869,7 +6893,7 @@ dependencies = [
  "json_to_table",
  "move-binary-format",
  "move-bytecode-utils",
- "move-core-types",
+ "move-core-types 0.0.4",
  "mysten-metrics",
  "schemars",
  "serde",
@@ -6926,7 +6950,7 @@ dependencies = [
  "move-bytecode-verifier",
  "move-command-line-common",
  "move-compiler",
- "move-core-types",
+ "move-core-types 0.0.4",
  "move-ir-types",
  "move-package",
  "move-symbol-pool",
@@ -7022,7 +7046,7 @@ dependencies = [
  "lru",
  "move-binary-format",
  "move-bytecode-utils",
- "move-core-types",
+ "move-core-types 0.0.4",
  "mysten-metrics",
  "num_enum",
  "object_store",
@@ -7072,7 +7096,7 @@ dependencies = [
  "move-binary-format",
  "move-bytecode-utils",
  "move-command-line-common",
- "move-core-types",
+ "move-core-types 0.0.4",
  "move-disassembler",
  "move-ir-types",
  "move-vm-profiler",
@@ -7118,7 +7142,7 @@ dependencies = [
  "move-binary-format",
  "move-bytecode-utils",
  "move-bytecode-verifier",
- "move-core-types",
+ "move-core-types 0.0.4",
  "move-vm-config",
  "sui-protocol-config",
  "sui-types",

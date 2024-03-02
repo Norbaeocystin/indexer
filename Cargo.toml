@@ -19,6 +19,7 @@ sui-data-ingestion = { git = "https://github.com/MystenLabs/sui"}
 sui-data-ingestion-core = { git = "https://github.com/MystenLabs/sui"}
 sui-types = { git = "https://github.com/MystenLabs/sui"}
 sui-storage = { git = "https://github.com/MystenLabs/sui"}
+move-core-types = "0.0.3"
 tokio = { version = "1.36.0", features = ["rt-multi-thread"] }
 # mongodb = "2.8.1"
 serde = { version = "1.0.197", features = ["derive"] }

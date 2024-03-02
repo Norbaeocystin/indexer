@@ -1,7 +1,25 @@
+use bcs::from_bytes;
 use serde::{Deserialize, Serialize};
 use sui_types::base_types::{ObjectID, SuiAddress};
 use sui_types::full_checkpoint_content::CheckpointData;
 use sui_types::id::ID;
+
+// in this moment not sure if the events have constant size ...
+pub fn parse(bytes: &[u8]){
+    let borrow_event = from_bytes::<BorrowEvent>(&bytes);
+    let borrow_event = from_bytes::<BorrowFlashLoanEvent>(&bytes);
+    let borrow_eventv2 = from_bytes::<BorrowEventV2>(&bytes);
+    let deposit_event = from_bytes::<CollateralDepositEvent>(&bytes);
+    let withdraw_event = from_bytes::<CollateralWithdrawEvent>(&bytes);
+    let liquidate_event = from_bytes::<LiquidateEvent>(&bytes);
+    let mint_event = from_bytes::<MintEvent>(&bytes);
+    let obligation_created_event = from_bytes::<ObligationCreatedEvent>(&bytes);
+    let obligation_locked_event = from_bytes::<ObligationLocked>(&bytes);
+    let obligation_unlocked_event = from_bytes::<ObligationUnlocked>(&bytes);
+    let redeem_event = from_bytes::<RedeemEvent>(&bytes);
+    let repay_event = from_bytes::<RepayEvent>(&bytes);
+    let repay_floshloan_event = from_bytes::<RepayFlashLoanEvent>(&bytes);
+}
 
 #[derive(Serialize,Deserialize,Debug)]
 pub struct IndexerData {
@@ -10,6 +28,7 @@ pub struct IndexerData {
     pub epoch: u64,
     pub data: Vec<u8>,
     pub index: u64,
+    pub type_: String,
 }
 
 
@@ -26,6 +45,7 @@ pub fn process_txn(data: &CheckpointData, filter: &Vec<ObjectID>) -> Vec<(String
                         epoch: data.checkpoint_summary.epoch.try_into().unwrap(),
                         data: event.contents.clone(),
                         index: idx as u64,
+                        type_: event.type_.to_string(),
                     };
                     results.push((digest, result));
                 }

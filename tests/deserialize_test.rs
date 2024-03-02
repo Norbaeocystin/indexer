@@ -1,7 +1,8 @@
 use serde::{Deserialize, Serialize};
 use sui_types::base_types::SuiAddress;
-use sui_types::TypeTag;
 use bcs::from_bytes;
+use sui_types::event::Event;
+
 
 #[derive(Serialize,Deserialize,Debug)]
 struct MintEvent{
