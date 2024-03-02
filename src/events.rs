@@ -10,7 +10,7 @@ use crate::events::ScallopEvent::BorrowFlashloanEvent;
 enum ScallopEvent {
     BorrowEvent(BorrowEvent),
     BorrowEventV2(BorrowEventV2),
-    BorrowFlashloanEvent(BorrowFlashLoanEvent),
+    BorrowFlashLoanEvent(BorrowFlashLoanEvent),
     CollateralDepositEvent(CollateralDepositEvent),
     CollateralWithdrawEvent(CollateralWithdrawEvent),
     LiquidateEvent(LiquidateEvent),
@@ -33,8 +33,8 @@ pub fn parse(bytes: &[u8], type_: &str) -> Option<ScallopEvent> {
             return Some(ScallopEvent::BorrowEvent(event));
         }
         "BorrowFlashLoanEvent" => {
-            let event = from_bytes::<BorrowFlashloanEvent>(&bytes).unwrap();
-            return Some(ScallopEvent::BorrowFlashloanEvent(event));
+            let event = from_bytes::<BorrowFlashLoanEvent>(&bytes).unwrap();
+            return Some(ScallopEvent::BorrowFlashLoanEvent(event));
         }
         "BorrowEventV2" => {
             let event = from_bytes::<BorrowEventV2>(&bytes).unwrap();
@@ -99,7 +99,7 @@ pub struct IndexerData {
 
 impl IndexerData {
     pub fn parse_event(&self) -> Option<ScallopEvent> {
-        return parse(&self.data, self.type_);
+        return parse(&self.data, &self.type_);
     }
 }
 
