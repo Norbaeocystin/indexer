@@ -36,7 +36,8 @@ struct Cli {
     exit: bool,
 }
 
-fn main(){
+#[tokio::main]
+async fn main(){
     info!("starting indexer");
     let filter = vec![ObjectID::from_str("0xefe8b36d5b2e43728cc323298626b83177803521d195cfb11e15b910e892fddf").unwrap(),
                       ObjectID::from_str("0xc38f849e81cfe46d4e4320f508ea7dda42934a329d5a6571bb4c3cb6ea63f5da").unwrap(),
@@ -47,7 +48,7 @@ fn main(){
     } else {
         env_logger::builder().filter_level(LevelFilter::Info).init();
     }
-    let runtime = Builder::new_multi_thread().enable_all().worker_threads(8).build().unwrap();
+    // let runtime = Builder::new_multi_thread().enable_all().worker_threads(8).build().unwrap();
     let client = Arc::new(RedisClient::new(RedisConfig{
         fail_fast: false,
         blocking: Blocking::Interrupt,
@@ -62,10 +63,12 @@ fn main(){
         version: RespVersion::RESP2,
         database: Some(cli.db),
     }, Some(PerformanceConfig::default()), Some(ConnectionConfig::default()), Some(ReconnectPolicy::default())));
-    let _ = runtime.block_on(async {
-        let _ = client.connect();
-        client.wait_for_connect().await
-    });
+    // let _ = runtime.block_on(async {
+    //     let _ = client.connect();
+    //     client.wait_for_connect().await
+    // });
+    let _ = client.connect();
+    client.wait_for_connect().await;
     info!("preparing redis done");
     let mut reader = CheckpointReader{ path: cli.path.parse().unwrap(), current_checkpoint_number: cli.start };
     loop {
@@ -98,9 +101,9 @@ fn main(){
             let result = process_txn(&checkpoint_data, &filter);
             if result.len() > 0 {
                 // TODO send to redis or mongodb via crossbeam channel
-                runtime.spawn({
-                    let client = client.clone();
-                    async move {
+                // runtime.spawn({
+                //     let client = client.clone();
+                //     async move {
                         for (digest, data) in result {
                             let event = data.parse_event();
                             let result = serde_json::to_string(&data).unwrap();
@@ -120,27 +123,22 @@ fn main(){
                             debug!("inserting data: {}", digest);
                         }
                         // return client.connect().await.unwrap();
-                    }});
+                    // }});
             }
+            client.set::<u64, u64, u64>(0_u64, number.clone(), None, None, false).await;
             // TODO progressor
-            runtime.spawn({
-            let client = client.clone();
-                let checkpoint_number = number.clone();
-            async move {
-                debug!("conecting redis client");
-                client.set::<u64, u64, u64>(0_u64, checkpoint_number, None, None, false).await;
-                // return client.connect().await.unwrap();
-            }});
+            // runtime.spawn({
+            // let client = client.clone();
+            //     let checkpoint_number = number.clone();
+            // async move {
+            //     debug!("conecting redis client");
+            //     client.set::<u64, u64, u64>(0_u64, checkpoint_number, None, None, false).await;
+            //     // return client.connect().await.unwrap();
+            // }});
             println!("checkpoint {}", number);
             let file_path = format!("{}/{}.chk", cli.path, reader.current_checkpoint_number );
             remove_file(file_path);
             reader.current_checkpoint_number = number;
         }
-        // let number = reader.current_checkpoint_number.clone();
-        // let path = reader.path.clone();
-        // thread::spawn( move ||
-        //     {
-        //     CheckpointReader::gc_processed_files(number, path);
-        // });
     }
 }
