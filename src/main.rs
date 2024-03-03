@@ -32,6 +32,8 @@ struct Cli {
     db: u8,
     #[arg(short,long, default_value_t=0)]
     batch: u64,
+    #[arg(short, long, action)]
+    exit: bool,
 }
 
 fn main(){
@@ -73,12 +75,20 @@ fn main(){
         if file_response.is_err() {
             sleep(Duration::from_millis(100));
             warn!("something bad happened {:?}", file_response.err());
+            if cli.exit {
+                sleep(Duration::from_secs(10));
+                std::process::exit(1);
+            }
             continue;
         }
         let checkpoints = file_response.unwrap();
         if checkpoints.len() == 0 {
             sleep(Duration::from_millis(100));
             debug!("No files to process ...");
+            if cli.exit {
+                sleep(Duration::from_secs(1));
+                std::process::exit(0);
+            }
             continue
         }
         for checkpoint_data in checkpoints.iter() {
