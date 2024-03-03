@@ -41,9 +41,7 @@ impl CheckpointReader {
             let entry = entry.unwrap();
             let filename = entry.file_name();
             if let Some(sequence_number) = Self::checkpoint_number_from_file_path(&filename) {
-                if sequence_number >= self.current_checkpoint_number {
                     files.push((sequence_number, entry.path()));
-                }
             }
         }
         let mut checkpoints = vec![];
