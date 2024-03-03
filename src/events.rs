@@ -85,7 +85,7 @@ pub fn parse(bytes: &[u8], type_: &str) -> Option<(ScallopEvent, String, Option<
             warn!("pattern for parsing event not found ...");
             let unknown = "unkown::".to_string();
             unknown.push_str(result);
-            return Some((ScallopEvent::Unkown, unknown, None))
+            return Some((ScallopEvent::Unknown, unknown, None))
         }
     }
     return None;
