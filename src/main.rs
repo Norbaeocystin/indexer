@@ -69,10 +69,10 @@ fn main(){
     loop {
         debug!("fetching file");
         // race condition?
-        let file_response =  if cli.batch > 0 {reader.read_batch_of_files(cli.batch.clone() as usize)} else {reader.read_local_files()};
+        let file_response =  if cli.batch > 0 {reader.read_random_batch_of_files(cli.batch.clone() as usize)} else {reader.read_local_files()};
         if file_response.is_err() {
             sleep(Duration::from_millis(100));
-            warn!("something bad happened");
+            warn!("something bad happened {:?}", file_response.err());
             continue;
         }
         let checkpoints = file_response.unwrap();
