@@ -20,7 +20,7 @@ pub enum ScallopEvent {
     RedeemEvent(RedeemEvent),
     RepayEvent(RepayEvent),
     RepayFlashLoanEvent(RepayFlashLoanEvent),
-    Unkown
+    Unknown
 }
 
 
@@ -83,8 +83,9 @@ pub fn parse(bytes: &[u8], type_: &str) -> Option<(ScallopEvent, String, Option<
         }
         _ => {
             warn!("pattern for parsing event not found ...");
-            let unkown = "unkown::".push(result.to_string());
-            return Some((ScallopEvent::Unkown, unkown, None))
+            let unknown = "unkown::".to_string();
+            unknown.push_str(result);
+            return Some((ScallopEvent::Unkown, unknown, None))
         }
     }
     return None;
