@@ -51,6 +51,7 @@ async fn main(){
             warn!("wrong {}", key );
             continue
         }
+        client.del::<String, String>(key.clone()).await;
         let indexer_data = indexer_data_raw.unwrap();
         let digest = indexer_data.digest.clone();
         let data = indexer_data.clone();
@@ -86,6 +87,5 @@ async fn main(){
         // stores event data as value with modified digest as key
         client.set::<String, String, String>(digest_modified, result, None, None, false).await;
         debug!("inserting data: {} {} {}", digest, idx, key);
-        client.del::<String, String>(key.clone()).await;
     }
 }
