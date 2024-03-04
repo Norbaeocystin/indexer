@@ -140,7 +140,8 @@ async fn main(){
                                client.sadd::<String,String,String>(events_set, digest_modified.clone()).await;
                                // stores event data as value with modified digest as key
                                client.set::<String, String, String>(digest_modified, result, None, None, false).await;
-                               debug!("inserting data: {}", digest);
+                               debug!("inserting data: {} {} {}", digest, idx, key);
+                               client.del::<String, String>(key.clone()).await;
                            }
                            // return client.connect().await.unwrap();
                            // }});

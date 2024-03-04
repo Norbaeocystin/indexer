@@ -38,6 +38,7 @@ async fn main(){
         if key == "0" {
             continue
         }
+        debug!("inserting data: {} {}", idx, key);
         let value: String = client.get(key).await.unwrap();
         let indexer_data: IndexerData = serde_json::from_str(&*value).unwrap();
         let digest = indexer_data.digest.clone();
