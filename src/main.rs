@@ -35,7 +35,7 @@ async fn main(){
     debug!("got: {}", keys.len());
     // let with_id = vec!["BorrowEvent", "BorrowEventV2"];
     for (idx, key) in keys.iter().enumerate() {
-        if key == 0 {
+        if key == "0" {
             continue
         }
         let value: String = client.get(key).await.unwrap();
