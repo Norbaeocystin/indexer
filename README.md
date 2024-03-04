@@ -28,7 +28,7 @@ DirectoryNotEmpty=/path/to/monitor
 WantedBy=multi-user.target
 ```
 
-
-8050399 14:57
-8059830 15:05
-8177913 17:19
+also for fetching full checkpoints: ... /checkpoints/{checkpoint_sequence_number}/full
+another way how to get full checkpoint - using rest api ( enable-experimental-rest-api - needs to be enabled on rpc node)
+curl -H "Accept: application/bcs" http://localhost:9000/rest/checkpoints/27837398/full
+more about [rest api ... ](https://github.com/MystenLabs/sui/blob/main/crates/sui-rest-api/src/lib.rs)

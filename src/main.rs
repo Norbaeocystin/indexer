@@ -34,6 +34,8 @@ struct Cli {
     batch: u64,
     #[arg(short, long, action)]
     exit: bool,
+    #[arg(short, long, action)]
+    external: bool,
 }
 
 #[tokio::main]
@@ -72,6 +74,13 @@ async fn main(){
     info!("preparing redis done");
     let mut reader = CheckpointReader{ path: cli.path.parse().unwrap(), current_checkpoint_number: cli.start };
     loop {
+        // if cli.external {
+        //     // let checkpoint = client.get(0).await;
+        //     // let url = format!("https://checkpoints.mainnet.sui.io/10964321.chk");
+        //     // let response = reqwest::get(url).await;
+        //     // // TODO
+        //     // continue
+        // }
         debug!("fetching file");
         // race condition?
         let file_response =  if cli.batch > 0 {reader.read_random_batch_of_files(cli.batch.clone() as usize)} else {reader.read_local_files()};
