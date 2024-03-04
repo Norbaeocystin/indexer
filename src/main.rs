@@ -132,7 +132,7 @@ async fn main(){
                    }
                    _ => {
                      // TODO retry
-                       warn!("problem: {} {} {:?}", status_code, url.clone(), response);
+                       warn!("problem: {} {:?}", status_code, response);
                    }
                }
             }
