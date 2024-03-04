@@ -13,7 +13,7 @@ async fn speed_test() {
     let client = reqwest::Client::new();
     // latest checkpoint
     let result = client.get("http://localhost:6000/rest/checkpoints").send().await;
-    info!("{:?} {}", result.unwrap(), start.elapsed().unwrap().as_millis());
+    info!("{:?} {}", result.unwrap().json(), start.elapsed().unwrap().as_millis());
     let result = client.get("http://localhost:6000/rest/checkpoints/27837398/full").header(ACCEPT, "application/bcs").send().await;
     let r = from_bytes::<CheckpointData>(&result.unwrap().bytes().await.unwrap()).unwrap();
     info!("{:?} {}", r.checkpoint_summary.epoch, start.elapsed().unwrap().as_millis());
