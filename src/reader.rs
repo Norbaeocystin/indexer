@@ -1,7 +1,6 @@
 use anyhow::Result;
 use std::ffi::OsString;
 use std::fs;
-use std::io::{Cursor};
 use std::path::PathBuf;
 use std::time::SystemTime;
 use sui_storage::blob::Blob;

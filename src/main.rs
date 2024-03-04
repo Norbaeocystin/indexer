@@ -79,17 +79,25 @@ async fn main(){
     let reqwest_client = reqwest::Client::new();
     loop {
         if cli.experimental.is_some() {
-            // let url = format!("{}/checkpoints/", cli.experimental.clone().unwrap());
-            // info!("experimental: {}", url);
             let checkpoint = client.get::<u64, u64>(0).await.unwrap_or(0);
+            // let health_url = format!("{}/health", cli.experimental.clone().unwrap());
+            // let response = reqwest_client.get(health_url).await;
+            // response.headers().get("x-sui-checkpoint-height").unwrap().to_str().unwrap().parse().unwrap();
             let url = format!("{}/checkpoints/{}/full", cli.experimental.clone().unwrap(), checkpoint + 1);
             let result = reqwest_client
                 .get(url)
                 .header(ACCEPT, "application/bcs")
                 .send().await;
            if  result.is_ok() {
-               let  response = result.unwrap();
+               let response = result.unwrap();
+               let checkpoint_height: u64 = response.headers().get("x-sui-checkpoint-height").unwrap().to_str().unwrap().parse().unwrap();
+               if checkpoint > checkpoint_height {
+                   sleep(Duration::from_millis(250)).await;
+                   debug!("looping again, checkpoint is not yet stored ...");
+                   continue;
+               }
                let status_code = response.status().as_u16();
+               // TODO add check ...
                match status_code {
                    200 => {
                        // TODO process normally
@@ -130,9 +138,11 @@ async fn main(){
                        debug!("not found");
                        sleep(Duration::from_millis(250)).await;
                    }
+                   // rpc return 500 - not found ...
                    _ => {
                      // TODO retry
-                       warn!("problem: {} {:?}", status_code, response);
+                       debug!("problem: {} {:?}", status_code, response);
+                       sleep(Duration::from_millis(1000)).await;
                    }
                }
             }
