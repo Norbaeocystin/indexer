@@ -35,6 +35,9 @@ async fn main(){
     debug!("got: {}", keys.len());
     // let with_id = vec!["BorrowEvent", "BorrowEventV2"];
     for (idx, key) in keys.iter().enumerate() {
+        if key == 0 {
+            continue
+        }
         let value: String = client.get(key).await.unwrap();
         let indexer_data: IndexerData = serde_json::from_str(&*value).unwrap();
         let digest = indexer_data.digest.clone();
@@ -70,7 +73,7 @@ async fn main(){
         client.sadd::<String,String,String>(events_set, digest_modified.clone()).await;
         // stores event data as value with modified digest as key
         client.set::<String, String, String>(digest_modified, result, None, None, false).await;
-        debug!("inserting data: {} {}", digest, idx);
+        debug!("inserting data: {} {} {}", digest, idx, key);
         client.del::<String, String>(key.clone()).await;
     }
 }
