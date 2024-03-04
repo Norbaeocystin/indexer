@@ -7,6 +7,7 @@ use std::time::{Duration};
 use sui_types::base_types::ObjectID;
 use serde::{Deserialize, Serialize};
 use bcs;
+use bcs::from_bytes;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use fred::prelude::*;
 use fred::prelude::ServerConfig::Centralized;
@@ -14,6 +15,7 @@ use fred::types::RespVersion;
 use log::{debug, info, LevelFilter, warn};
 use reader::CheckpointReader;
 use clap::Parser;
+use sui_types::full_checkpoint_content::CheckpointData;
 use tokio::runtime::Builder;
 use crate::events::process_txn;
 
@@ -28,14 +30,16 @@ struct Cli {
     debug: bool,
     #[arg(short,long, default_value_t=0)]
     start: u64,
-    #[arg(short,long, default_value_t=0)]
+    #[arg(long, default_value_t=0)]
     db: u8,
     #[arg(short,long, default_value_t=0)]
     batch: u64,
     #[arg(short, long, action)]
     exit: bool,
-    #[arg(short, long, action)]
-    external: bool,
+    #[arg(long, action, help="optional URL to experimental api, needs to be allowed on rpc node, eg. http://localhost:9000/rest")]
+    experimental: Option<String>,
+    // #[arg(short, long, action, requires(rpc_experimental))]
+    // experimental: bool,
 }
 
 #[tokio::main]
@@ -74,13 +78,63 @@ async fn main(){
     info!("preparing redis done");
     let mut reader = CheckpointReader{ path: cli.path.parse().unwrap(), current_checkpoint_number: cli.start };
     loop {
-        // if cli.external {
-        //     // let checkpoint = client.get(0).await;
-        //     // let url = format!("https://checkpoints.mainnet.sui.io/10964321.chk");
-        //     // let response = reqwest::get(url).await;
-        //     // // TODO
-        //     // continue
-        // }
+        if cli.experimental.is_some() {
+            // let url = format!("{}/checkpoints/", cli.experimental.clone().unwrap());
+            // info!("experimental: {}", url);
+            let checkpoint = client.get::<u64, u64>(0).await.unwrap_or(0);
+            let url = format!("{}/checkpoints/{}/full", cli.experimental.clone().unwrap(), checkpoint + 1);
+            let result = reqwest::get(url).await;
+           if  result.is_ok() {
+               let  response = result.unwrap();
+               let status_code = response.status().as_u16();
+               match status_code {
+                   200 => {
+                       // TODO process normally
+                       let checkpoint_data = from_bytes::<CheckpointData>(&result.unwrap().bytes().await.unwrap()).unwrap();
+                       let number = checkpoint_data.checkpoint_summary.sequence_number.clone();
+                       // let checkpoint_data = reader.read_checkpoint(path).unwrap();
+                       let result = process_txn(&checkpoint_data, &filter);
+                       if result.len() > 0 {
+                           // TODO send to redis or mongodb via crossbeam channel
+                           // runtime.spawn({
+                           //     let client = client.clone();
+                           //     async move {
+                           for (digest, data) in result {
+                               let event = data.parse_event();
+                               let result = serde_json::to_string(&data).unwrap();
+                               // more events can have same digest ... with index is unique
+                               let mut digest_modified = format!("{}::{}::{}", data.checkpoint, digest, data.index);
+                               if event.is_some() {
+                                   let (_, event_name, obligation_id) = event.unwrap();
+                                   digest_modified.push_str("::");
+                                   digest_modified.push_str(&event_name);
+                                   if obligation_id.is_some() {
+                                       let id = obligation_id.unwrap();
+                                       digest_modified.push_str("::");
+                                       digest_modified.push_str(&id);
+                                   }
+                               }
+                               client.set::<String, String, String>(digest_modified, result, None, None, false).await;
+                               debug!("inserting data: {}", digest);
+                           }
+                           // return client.connect().await.unwrap();
+                           // }});
+                       }
+                       client.set::<u64, u64, u64>(0_u64, number.clone(), None, None, false).await;
+                   }
+                   404 => {
+                       // 2 cases - checkpoint is too low or do not exists in the moment
+                       debug!("not found");
+                       sleep(Duration::from_millis(250)).await;
+                   }
+                   _ => {
+                     // TODO retry
+                       warn!("problem: {} {} {:?}", status_code, url, response);
+                   }
+               }
+            }
+            continue
+        }
         debug!("fetching file");
         // race condition?
         let file_response =  if cli.batch > 0 {reader.read_random_batch_of_files(cli.batch.clone() as usize)} else {reader.read_local_files()};
