@@ -2,7 +2,7 @@ use std::sync::Arc;
 use fred::clients::RedisClient;
 use fred::cmd;
 use fred::interfaces::SetsInterface;
-use fred::prelude::{Blocking, ClientLike, ConnectionConfig, KeysInterface, PerformanceConfig, ReconnectPolicy, RedisConfig, Server};
+use fred::prelude::{Blocking, ClientLike, ConnectionConfig, KeysInterface, PerformanceConfig, ReconnectPolicy, RedisConfig, RedisResult, Server};
 use fred::prelude::ServerConfig::Centralized;
 use fred::types::RespVersion;
 use log::{debug, LevelFilter, warn};
@@ -36,11 +36,16 @@ async fn main(){
     debug!("got: {}", keys.len());
     // let with_id = vec!["BorrowEvent", "BorrowEventV2"];
     for (idx, key) in keys.iter().enumerate() {
-        if key == "0" && key.starts_with("id") && key.starts_with("events_") {
+        if key == "0" || key.starts_with("id") || key.starts_with("events_") {
             continue
         }
         // debug!("inserting data: {} {}", idx, key);
-        let value: String = client.get(key).await.unwrap();
+        let raw_value: RedisResult<String> = client.get(key).await;
+        if raw_value.is_err() {
+            warn!("wrong {}", key );
+            continue
+        }
+        let value = raw_value.unwrap();
         let indexer_data_raw: Result<IndexerData> = serde_json::from_str(&*value);
         if indexer_data_raw.is_err() {
             warn!("wrong {}", key );
