@@ -51,11 +51,11 @@ async fn main(){
                 let id = obligation_id.unwrap();
                 let mut id_set = "id_".to_string();
                 id_set.push_str(&*id);
-                // stores digest modified key in id_{obligation_id}
+                // stores indexer data in id_{obligation_id}
                 client.sadd::<String,String,String>(id_set, result).await;
                 // stores obligation_id in ids set ...
                 client.sadd::<String,String,String>("ids".to_string(), id).await;
-                let mut events_set = "events".to_string();
+                let mut events_set = "events_".to_string();
                 events_set.push_str(&*data.type_);
                 client.sadd::<String,String,String>(events_set, digest_modified.clone()).await;
                 debug!("inserting obligations");
