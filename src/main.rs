@@ -34,7 +34,7 @@ async fn main(){
     let keys: Vec<String> = client.custom(cmd!("KEYS"), vec!["*"]).await.unwrap();
     debug!("got: {}", keys.len());
     // let with_id = vec!["BorrowEvent", "BorrowEventV2"];
-    for key in keys.iter() {
+    for (idx, key) in keys.iter().enumerate() {
         let value: String = client.get(key).await.unwrap();
         let indexer_data: IndexerData = serde_json::from_str(&*value).unwrap();
         let digest = indexer_data.digest.clone();
@@ -52,16 +52,15 @@ async fn main(){
                 let mut id_set = "id_".to_string();
                 id_set.push_str(&*id);
                 // stores digest modified key in id_{obligation_id}
-                client.sadd::<String,String,String>(id_set, digest_modified.clone()).await;
+                client.sadd::<String,String,String>(id_set, result).await;
                 // stores obligation_id in ids set ...
                 client.sadd::<String,String,String>("ids".to_string(), id).await;
-                // let mut events_set = "events_".to_string();
-                // events_set.push_str(&*data.type_);
-                // client.sadd::<String,String,String>(events_set, digest_modified.clone()).await;
+                let mut events_set = "events".to_string();
+                events_set.push_str(&*data.type_);
+                client.sadd::<String,String,String>(events_set, digest_modified.clone()).await;
                 debug!("inserting obligations");
-                // continue;
-                // digest_modified.push_str("::");
-                // digest_modified.push_str(&id);
+                client.del::<String, String>(key.clone()).await;
+                continue;
             }
         }
         // store keys in set
@@ -71,7 +70,7 @@ async fn main(){
         client.sadd::<String,String,String>(events_set, digest_modified.clone()).await;
         // stores event data as value with modified digest as key
         client.set::<String, String, String>(digest_modified, result, None, None, false).await;
-        debug!("inserting data: {}", digest);
+        debug!("inserting data: {} {}", digest, idx);
         client.del::<String, String>(key.clone()).await;
     }
 }
