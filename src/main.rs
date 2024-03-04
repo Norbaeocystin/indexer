@@ -5,8 +5,9 @@ use fred::interfaces::SetsInterface;
 use fred::prelude::{Blocking, ClientLike, ConnectionConfig, KeysInterface, PerformanceConfig, ReconnectPolicy, RedisConfig, Server};
 use fred::prelude::ServerConfig::Centralized;
 use fred::types::RespVersion;
-use log::{debug, LevelFilter};
+use log::{debug, LevelFilter, warn};
 use sui_indexer::events::IndexerData;
+use serde_json::Result;
 
 #[tokio::main]
 async fn main(){
@@ -35,12 +36,17 @@ async fn main(){
     debug!("got: {}", keys.len());
     // let with_id = vec!["BorrowEvent", "BorrowEventV2"];
     for (idx, key) in keys.iter().enumerate() {
-        if key == "0" {
+        if key == "0" && key.starts_with("id") && key.starts_with("events_") {
             continue
         }
-        debug!("inserting data: {} {}", idx, key);
+        // debug!("inserting data: {} {}", idx, key);
         let value: String = client.get(key).await.unwrap();
-        let indexer_data: IndexerData = serde_json::from_str(&*value).unwrap();
+        let indexer_data_raw: Result<IndexerData> = serde_json::from_str(&*value);
+        if indexer_data_raw.is_err() {
+            warn!("wrong {}", key );
+            continue
+        }
+        let indexer_data = indexer_data_raw.unwrap();
         let digest = indexer_data.digest.clone();
         let data = indexer_data.clone();
         let event = data.parse_event();
