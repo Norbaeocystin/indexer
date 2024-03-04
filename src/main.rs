@@ -93,7 +93,7 @@ async fn main(){
                match status_code {
                    200 => {
                        // TODO process normally
-                       let checkpoint_data = from_bytes::<CheckpointData>(&result.unwrap().bytes().await.unwrap()).unwrap();
+                       let checkpoint_data = from_bytes::<CheckpointData>(&response.bytes().await.unwrap()).unwrap();
                        let number = checkpoint_data.checkpoint_summary.sequence_number.clone();
                        // let checkpoint_data = reader.read_checkpoint(path).unwrap();
                        let result = process_txn(&checkpoint_data, &filter);
