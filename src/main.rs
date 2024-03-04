@@ -1,8 +1,6 @@
 use std::str::FromStr;
 use std::sync::Arc;
 use std::fs::remove_file;
-use std::thread;
-use std::thread::sleep;
 use std::time::{Duration};
 use sui_types::base_types::ObjectID;
 use serde::{Deserialize, Serialize};
@@ -16,7 +14,7 @@ use log::{debug, info, LevelFilter, warn};
 use reader::CheckpointReader;
 use clap::Parser;
 use sui_types::full_checkpoint_content::CheckpointData;
-use tokio::runtime::Builder;
+use tokio::time::sleep;
 use crate::events::process_txn;
 
 pub mod events;
@@ -139,20 +137,17 @@ async fn main(){
         // race condition?
         let file_response =  if cli.batch > 0 {reader.read_random_batch_of_files(cli.batch.clone() as usize)} else {reader.read_local_files()};
         if file_response.is_err() {
-            sleep(Duration::from_millis(100));
             warn!("something bad happened {:?}", file_response.err());
             if cli.exit {
-                sleep(Duration::from_secs(10));
                 std::process::exit(1);
             }
             continue;
         }
         let checkpoints = file_response.unwrap();
         if checkpoints.len() == 0 {
-            sleep(Duration::from_millis(100));
+            sleep(Duration::from_millis(100)).await;
             debug!("No files to process ...");
             if cli.exit {
-                sleep(Duration::from_secs(1));
                 std::process::exit(0);
             }
             continue
