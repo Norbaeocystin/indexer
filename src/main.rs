@@ -13,6 +13,7 @@ use fred::types::RespVersion;
 use log::{debug, info, LevelFilter, warn};
 use reader::CheckpointReader;
 use clap::Parser;
+use reqwest::header::ACCEPT;
 use sui_types::full_checkpoint_content::CheckpointData;
 use tokio::time::sleep;
 use crate::events::process_txn;
@@ -75,13 +76,17 @@ async fn main(){
     client.wait_for_connect().await;
     info!("preparing redis done");
     let mut reader = CheckpointReader{ path: cli.path.parse().unwrap(), current_checkpoint_number: cli.start };
+    let reqwest_client = reqwest::Client::new();
     loop {
         if cli.experimental.is_some() {
             // let url = format!("{}/checkpoints/", cli.experimental.clone().unwrap());
             // info!("experimental: {}", url);
             let checkpoint = client.get::<u64, u64>(0).await.unwrap_or(0);
             let url = format!("{}/checkpoints/{}/full", cli.experimental.clone().unwrap(), checkpoint + 1);
-            let result = reqwest::get(url).await;
+            let result = reqwest_client
+                .get(url)
+                .header(ACCEPT, "application/bcs")
+                .send().await;
            if  result.is_ok() {
                let  response = result.unwrap();
                let status_code = response.status().as_u16();
@@ -127,7 +132,7 @@ async fn main(){
                    }
                    _ => {
                      // TODO retry
-                       warn!("problem: {} {} {:?}", status_code, url, response);
+                       warn!("problem: {} {} {:?}", status_code, url.clone(), response);
                    }
                }
             }
