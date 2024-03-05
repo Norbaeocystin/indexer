@@ -42,6 +42,7 @@ async fn main(){
     info!("starting indexer");
     let filter = vec![ObjectID::from_str("0xefe8b36d5b2e43728cc323298626b83177803521d195cfb11e15b910e892fddf").unwrap(),
                       ObjectID::from_str("0xc38f849e81cfe46d4e4320f508ea7dda42934a329d5a6571bb4c3cb6ea63f5da").unwrap(),
+        ObjectID::from_str("0x41c0788f4ab64cf36dc882174f467634c033bf68c3c1b5ef9819507825eb510b").unwrap(),
     ];
     let mut cli = Cli::parse();
     if cli.debug {
