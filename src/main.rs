@@ -106,14 +106,13 @@ async fn main(){
                            //     let client = client.clone();
                            //     async move {
                            for (digest, data) in result {
+                               info!("digest: {}", digest);
                                let event = data.parse_event();
                                let result = serde_json::to_string(&data).unwrap();
                                // more events can have same digest ... with index is unique
                                let mut digest_modified = format!("{}::{}::{}", data.checkpoint, digest, data.index);
                                if event.is_some() {
                                    let (_, event_name, obligation_id) = event.unwrap();
-                                   // digest_modified.push_str("::");
-                                   // digest_modified.push_str(&event_name);
                                    if obligation_id.is_some() {
                                        let id = obligation_id.unwrap();
                                        let mut id_set = "id_".to_string();
