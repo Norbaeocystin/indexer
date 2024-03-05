@@ -40,9 +40,9 @@ struct Cli {
 #[tokio::main]
 async fn main(){
     info!("starting indexer");
-    let filter = vec![ObjectID::from_str("0xefe8b36d5b2e43728cc323298626b83177803521d195cfb11e15b910e892fddf").unwrap(),
-                      ObjectID::from_str("0xc38f849e81cfe46d4e4320f508ea7dda42934a329d5a6571bb4c3cb6ea63f5da").unwrap(),
-        ObjectID::from_str("0x41c0788f4ab64cf36dc882174f467634c033bf68c3c1b5ef9819507825eb510b").unwrap(),
+    let filter = vec!["0xefe8b36d5b2e43728cc323298626b83177803521d195cfb11e15b910e892fddf".to_string(),
+                      "0xc38f849e81cfe46d4e4320f508ea7dda42934a329d5a6571bb4c3cb6ea63f5da".to_string(),
+        "0x41c0788f4ab64cf36dc882174f467634c033bf68c3c1b5ef9819507825eb510b".to_string(),
     ];
     let mut cli = Cli::parse();
     if cli.debug {
@@ -181,30 +181,38 @@ async fn main(){
             // let checkpoint_data = reader.read_checkpoint(path).unwrap();
             let result = process_txn(&checkpoint_data, &filter);
             if result.len() > 0 {
-                // TODO send to redis or mongodb via crossbeam channel
-                // runtime.spawn({
-                //     let client = client.clone();
-                //     async move {
-                        for (digest, data) in result {
-                            let event = data.parse_event();
-                            let result = serde_json::to_string(&data).unwrap();
-                            // more events can have same digest ... with index is unique
-                            let mut digest_modified = format!("{}::{}::{}", data.checkpoint, digest, data.index);
-                            if event.is_some() {
-                                let (_, event_name, obligation_id) = event.unwrap();
-                                digest_modified.push_str("::");
-                                digest_modified.push_str(&event_name);
-                                if obligation_id.is_some() {
-                                    let id = obligation_id.unwrap();
-                                    digest_modified.push_str("::");
-                                    digest_modified.push_str(&id);
-                                }
-                            }
-                            client.set::<String, String, String>(digest_modified, result, None, None, false).await;
-                            debug!("inserting data: {}", digest);
+                for (digest, data) in result {
+                    debug!("digest: {}", digest);
+                    let event = data.parse_event();
+                    let result = serde_json::to_string(&data).unwrap();
+                    // more events can have same digest ... with index is unique
+                    let mut digest_modified = format!("{}::{}::{}", data.checkpoint, digest, data.index);
+                    if event.is_some() {
+                        let (_, event_name, obligation_id) = event.unwrap();
+                        if obligation_id.is_some() {
+                            let id = obligation_id.unwrap();
+                            let mut id_set = "id_".to_string();
+                            id_set.push_str(&*id);
+                            // stores indexer data in id_{obligation_id}
+                            client.sadd::<String,String,String>(id_set, result).await;
+                            // stores obligation_id in ids set ...
+                            client.sadd::<String,String,String>("ids".to_string(), id).await;
+                            let mut events_set = "events_".to_string();
+                            events_set.push_str(&*data.type_);
+                            // storing digest but this digest does not have value ...
+                            client.sadd::<String,String,String>(events_set, digest_modified.clone()).await;
+                            debug!("inserting obligations");
+                            continue;
                         }
-                        // return client.connect().await.unwrap();
-                    // }});
+                    }
+                    // store keys in set
+                    let mut events_set = "events_".to_string();
+                    events_set.push_str(&*data.type_);
+                    // stores digest modified key in events_{event type} query
+                    client.sadd::<String,String,String>(events_set, digest_modified.clone()).await;
+                    // stores event data as value with modified digest as key
+                    client.set::<String, String, String>(digest_modified, result, None, None, false).await;
+                }
             }
             client.set::<u64, u64, u64>(0_u64, number.clone(), None, None, false).await;
             // TODO progressor

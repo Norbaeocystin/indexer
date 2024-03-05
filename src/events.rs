@@ -107,12 +107,12 @@ impl IndexerData {
     }
 }
 
-pub fn process_txn(data: &CheckpointData, filter: &Vec<ObjectID>) -> Vec<(String, IndexerData)>{
+pub fn process_txn(data: &CheckpointData, filter: &Vec<String>) -> Vec<(String, IndexerData)>{
     let mut results = vec![];
     for txn in data.transactions.iter() {
         for events in txn.events.iter() {
             for (idx, event) in events.data.iter().enumerate() {
-                if filter.contains(&event.package_id) {
+                if filter.contains(&event.type_.address.to_string()) || filter.contains(&event.package_id.to_string()) {
                     let digest = txn.transaction.digest().to_string();
                     let result = IndexerData{
                         digest: digest.clone(),
