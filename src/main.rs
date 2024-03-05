@@ -72,6 +72,7 @@ async fn main(){
     info!("preparing redis done");
     let mut reader = CheckpointReader{ path: cli.path.parse().unwrap(), current_checkpoint_number: cli.start };
     let reqwest_client = reqwest::Client::new();
+    let mut sleep_time = 0;
     loop {
         if cli.experimental.is_some() {
             let checkpoint = client.get::<u64, u64>(0).await.unwrap_or(0);
@@ -87,7 +88,8 @@ async fn main(){
                let response = result.unwrap();
                let checkpoint_height: u64 = response.headers().get("x-sui-checkpoint-height").unwrap().to_str().unwrap().parse().unwrap();
                if checkpoint > checkpoint_height {
-                   sleep(Duration::from_millis(250)).await;
+                   sleep_time = 500;
+                   sleep(Duration::from_millis(sleep_time)).await;
                    debug!("looping again, checkpoint is not yet stored ...");
                    continue;
                }
@@ -154,6 +156,9 @@ async fn main(){
                        sleep(Duration::from_millis(1000)).await;
                    }
                }
+            }
+            if sleep_time > 0 {
+                sleep(Duration::from_millis(500)).await;
             }
             continue
         }
