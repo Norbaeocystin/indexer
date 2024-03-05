@@ -73,30 +73,9 @@ async fn main(){
     info!("preparing redis done");
     let mut reader = CheckpointReader{ path: cli.path.parse().unwrap(), current_checkpoint_number: cli.start };
     let reqwest_client = reqwest::Client::new();
-    let mut sleep_time = 0;
     loop {
         if cli.experimental.is_some() {
             let checkpoint = client.get::<u64, u64>(0).await.unwrap_or(0);
-            let json = &serde_json::json!({
-                                      "jsonrpc": "2.0",
-                                      "id": 1,
-                                      "method": "sui_getLatestCheckpointSequenceNumber",
-                                      "params": []
-                                    });
-            // get latest synced checkpoint
-            let latest_synced_checkpoint_request = reqwest_client.post(
-                cli.experimental.clone().unwrap().replace("/rest","")
-            ).json(json)
-                .header(ACCEPT, "application/json")
-                .header(CONTENT_TYPE, "application/json").build().unwrap();
-            let response = reqwest_client.execute(latest_synced_checkpoint_request).await.unwrap();
-            // println!("{:?}", response.text().await);
-            let latest_sync_checkpoint: u64 = response.json::<Value>().await.unwrap().get("result").unwrap().to_string().replace("\"","").parse().unwrap();
-            if latest_sync_checkpoint < checkpoint {
-                sleep_time = 500;
-                sleep(Duration::from_millis(sleep_time)).await;
-                debug!("looping again, checkpoint is not yet synced ...");
-            }
             let url = format!("{}/checkpoints/{}/full", cli.experimental.clone().unwrap(), checkpoint + 1);
             let result = reqwest_client
                 .get(url)
@@ -105,12 +84,11 @@ async fn main(){
            if  result.is_ok() {
                let response = result.unwrap();
                let checkpoint_height: u64 = response.headers().get("x-sui-checkpoint-height").unwrap().to_str().unwrap().parse().unwrap();
-               // if checkpoint > checkpoint_height {
-               //     sleep_time = 500;
-               //     sleep(Duration::from_millis(sleep_time)).await;
-               //     debug!("looping again, checkpoint is not yet stored ...");
-               //     continue;
-               // }
+               if checkpoint > checkpoint_height {
+                   sleep(Duration::from_millis(100)).await;
+                   debug!("looping again, checkpoint is not yet stored ...");
+                   continue;
+               }
                let status_code = response.status().as_u16();
                // TODO add check ...
                match status_code {
