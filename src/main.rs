@@ -153,9 +153,6 @@ async fn main(){
                    }
                }
             }
-            if sleep_time > 0 {
-                sleep(Duration::from_millis(500)).await;
-            }
             continue
         }
         debug!("fetching file");
