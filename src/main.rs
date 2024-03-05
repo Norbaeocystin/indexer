@@ -11,7 +11,8 @@ use fred::types::RespVersion;
 use log::{debug, info, LevelFilter, warn};
 use sui_indexer::reader::CheckpointReader;
 use clap::Parser;
-use reqwest::header::ACCEPT;
+use reqwest::header::{ACCEPT, CONTENT_TYPE};
+use serde_json::Value;
 use sui_types::full_checkpoint_content::CheckpointData;
 use tokio::time::sleep;
 use sui_indexer::events::process_txn;
@@ -42,7 +43,7 @@ async fn main(){
     let filter = vec![ObjectID::from_str("0xefe8b36d5b2e43728cc323298626b83177803521d195cfb11e15b910e892fddf").unwrap(),
                       ObjectID::from_str("0xc38f849e81cfe46d4e4320f508ea7dda42934a329d5a6571bb4c3cb6ea63f5da").unwrap(),
     ];
-    let cli = Cli::parse();
+    let mut cli = Cli::parse();
     if cli.debug {
         env_logger::builder().filter_level(LevelFilter::Debug).init();
     } else {
@@ -76,9 +77,26 @@ async fn main(){
     loop {
         if cli.experimental.is_some() {
             let checkpoint = client.get::<u64, u64>(0).await.unwrap_or(0);
-            // let health_url = format!("{}/health", cli.experimental.clone().unwrap());
-            // let response = reqwest_client.get(health_url).await;
-            // response.headers().get("x-sui-checkpoint-height").unwrap().to_str().unwrap().parse().unwrap();
+            let json = &serde_json::json!({
+                                      "jsonrpc": "2.0",
+                                      "id": 1,
+                                      "method": "sui_getLatestCheckpointSequenceNumber",
+                                      "params": []
+                                    });
+            // get latest synced checkpoint
+            let latest_synced_checkpoint_request = reqwest_client.post(
+                cli.experimental.clone().unwrap().replace("/rest","")
+            ).json(json)
+                .header(ACCEPT, "application/json")
+                .header(CONTENT_TYPE, "application/json").build().unwrap();
+            let response = reqwest_client.execute(latest_synced_checkpoint_request).await.unwrap();
+            // println!("{:?}", response.text().await);
+            let latest_sync_checkpoint: u64 = response.json::<Value>().await.unwrap().get("result").unwrap().to_string().replace("\"","").parse().unwrap();
+            if latest_sync_checkpoint < checkpoint {
+                sleep_time = 500;
+                sleep(Duration::from_millis(sleep_time)).await;
+                debug!("looping again, checkpoint is not yet synced ...");
+            }
             let url = format!("{}/checkpoints/{}/full", cli.experimental.clone().unwrap(), checkpoint + 1);
             let result = reqwest_client
                 .get(url)
@@ -87,12 +105,12 @@ async fn main(){
            if  result.is_ok() {
                let response = result.unwrap();
                let checkpoint_height: u64 = response.headers().get("x-sui-checkpoint-height").unwrap().to_str().unwrap().parse().unwrap();
-               if checkpoint > checkpoint_height {
-                   sleep_time = 500;
-                   sleep(Duration::from_millis(sleep_time)).await;
-                   debug!("looping again, checkpoint is not yet stored ...");
-                   continue;
-               }
+               // if checkpoint > checkpoint_height {
+               //     sleep_time = 500;
+               //     sleep(Duration::from_millis(sleep_time)).await;
+               //     debug!("looping again, checkpoint is not yet stored ...");
+               //     continue;
+               // }
                let status_code = response.status().as_u16();
                // TODO add check ...
                match status_code {
@@ -108,7 +126,7 @@ async fn main(){
                            //     let client = client.clone();
                            //     async move {
                            for (digest, data) in result {
-                               info!("digest: {}", digest);
+                               debug!("digest: {}", digest);
                                let event = data.parse_event();
                                let result = serde_json::to_string(&data).unwrap();
                                // more events can have same digest ... with index is unique
